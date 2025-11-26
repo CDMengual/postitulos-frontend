@@ -11,12 +11,15 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import {
+  MoreVert as MoreVertIcon,
+  Delete as DeleteIcon,
+  Visibility as VisibilityIcon,
+} from "@mui/icons-material";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { Aula } from "@/types/aula";
 import { useUserContext } from "@/components/providers/UserProvider";
-import { getPostituloTypeMeta } from "@/constants/postituloTypes";
+import { getEstadoCohorteMeta } from "@/constants/pillColor";
 import Pill from "@/components/ui/Pill";
 
 interface Props {
@@ -27,6 +30,7 @@ interface Props {
 
 export default function AulasTable({ data, loading, onDelete }: Props) {
   const { user } = useUserContext();
+  const { setLoading } = useLoading();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<Aula | null>(null);
   const open = Boolean(anchorEl);
@@ -43,6 +47,7 @@ export default function AulasTable({ data, loading, onDelete }: Props) {
   };
 
   const handleView = () => {
+    setLoading(true);
     if (selectedRow) router.push(`/gestion/aulas/${selectedRow.id}`);
     handleMenuClose();
   };
@@ -54,54 +59,52 @@ export default function AulasTable({ data, loading, onDelete }: Props) {
 
   const columns: GridColDef[] = useMemo(() => {
     const baseColumns: GridColDef[] = [
-      { field: "codigo", headerName: "Aula", flex: 0.8 },
-
+      {
+        field: "codigo",
+        headerName: "Código",
+        flex: 0.8,
+      },
       {
         field: "postitulo",
         headerName: "Postítulo",
-        flex: 1.5,
+        flex: 2,
         valueGetter: (_value, row) =>
-          row.postitulo
-            ? `${row.postitulo.nombre} – ${row.postitulo.codigo ?? ""}`
+          row.cohorte?.postitulo
+            ? `${row.cohorte.postitulo.nombre} (${row.cohorte.postitulo.codigo})`
             : "-",
       },
-      { field: "cohorte", headerName: "Cohorte", width: 100 },
+      {
+        field: "estado",
+        headerName: "Estado",
+        width: 150,
+        renderCell: ({ row }) => {
+          const meta = getEstadoCohorteMeta(row.cohorte?.estado);
+          return (
+            <Pill variant="filled" label={meta.label} color={meta.color} />
+          );
+        },
+      },
     ];
 
-    // 👇 Solo los ADMIN ven la columna "Referente"
+    // 👤 Solo los ADMIN ven la columna "Referente"
     if (user?.rol === "ADMIN") {
       baseColumns.push({
         field: "referentes",
         headerName: "Referente",
         flex: 1,
         valueGetter: (_value, row: Aula) =>
-          row.referentes && row.referentes.length > 0
+          row.referentes?.length
             ? row.referentes.map((r) => `${r.nombre} ${r.apellido}`).join(", ")
             : "-",
       });
     }
 
-    // Se agrega pill y acciones
-    baseColumns.push({
-      field: "tipo",
-      headerName: "Tipo",
-      flex: 0.7,
-      renderCell: ({ row }) => {
-        const { label, color } = getPostituloTypeMeta(row.postitulo.tipo);
-        return (
-          <Pill
-            label={label}
-            color={color}
-            variant="outlined"
-            sx={{ textTransform: "capitalize" }}
-          />
-        );
-      },
-    });
+    // ⚙️ Acciones
     baseColumns.push({
       field: "acciones",
       headerName: "",
       width: 50,
+      sortable: false,
       renderCell: (params: GridRenderCellParams<Aula>) => (
         <IconButton size="small" onClick={(e) => handleMenuOpen(e, params.row)}>
           <MoreVertIcon fontSize="small" />
@@ -113,7 +116,7 @@ export default function AulasTable({ data, loading, onDelete }: Props) {
   }, [user]);
 
   return (
-    <Box sx={{ height: "auto", width: "100%", overflowX: "auto" }}>
+    <Box sx={{ width: "100%", overflowX: "auto" }}>
       <DataGrid
         rows={data}
         columns={columns}

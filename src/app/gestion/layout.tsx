@@ -3,14 +3,22 @@
 import { Box, CircularProgress, Stack } from "@mui/material";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import RouteLoadingListener from "@/components/providers/RouteLoadingListener";
+import {
+  useLoading,
+  LoadingProvider,
+} from "@/components/providers/LoadingProvider";
 import UserProvider, {
   useUserContext,
 } from "@/components/providers/UserProvider";
+import { SidebarProvider } from "@/components/providers/SidebarProvider";
 
 function Shell({ children }: { children: React.ReactNode }) {
-  const { loading } = useUserContext();
+  const { loading: userLoading } = useUserContext();
+  const { loading } = useLoading();
 
-  if (loading) {
+  if (userLoading) {
     return (
       <Stack minHeight="100vh" alignItems="center" justifyContent="center">
         <CircularProgress />
@@ -37,9 +45,13 @@ function Shell({ children }: { children: React.ReactNode }) {
         }}
       >
         <Navbar />
-        {/* separador para que el contenido no quede debajo del AppBar */}
-        <Box component="main" sx={{ flex: 1, p: 3, overflow: "auto" }}>
+
+        <Box
+          component="main"
+          sx={{ flex: 1, p: 3, overflow: "auto", position: "relative" }}
+        >
           {children}
+          {loading && <LoadingOverlay />}
         </Box>
       </Box>
     </Box>
@@ -51,10 +63,16 @@ export default function GestionLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // UserProvider trae /user y expone role para Sidebar
   return (
-    <UserProvider>
-      <Shell>{children}</Shell>
-    </UserProvider>
+    <LoadingProvider>
+      <UserProvider>
+        <SidebarProvider>
+          <Shell>
+            <RouteLoadingListener />
+            {children}
+          </Shell>
+        </SidebarProvider>
+      </UserProvider>
+    </LoadingProvider>
   );
 }

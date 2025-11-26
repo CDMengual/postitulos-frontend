@@ -1,25 +1,29 @@
+import { Cursante, CursanteAula } from "./cursante";
+
 export interface Aula {
   id: number;
   numero: number;
-  cohorte: number;
-  nombre: string;
   codigo: string;
-  postitulo?: {
+  nombre: string;
+  cohorte: {
     id: number;
     nombre: string;
-    codigo: string;
-    tipo: string;
+    anio: number;
+    estado?: string;
+    postitulo: {
+      id: number;
+      nombre: string;
+      codigo: string;
+    };
   };
-  referentes?: { id: number; nombre: string; apellido: string }[];
-  cursantesData?: {
+  instituto?: {
+    id: number;
+    nombre: string;
+  };
+  referentes?: {
     id: number;
     nombre: string;
     apellido: string;
-    dni: string;
-    email?: string;
-    celular?: number;
-    region?: number;
-    distrito?: string;
-    titulo?: string;
   }[];
+  cursantes?: CursanteAula[];
 }

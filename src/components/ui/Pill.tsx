@@ -1,7 +1,15 @@
 "use client";
 import { Chip, ChipProps } from "@mui/material";
 
-export default function Pill(props: ChipProps) {
+interface PillProps extends Omit<ChipProps, "color"> {
+  color?: ChipProps["color"] | string;
+}
+
+export default function Pill({ color, sx, ...props }: PillProps) {
+  const isCustomColor =
+    typeof color === "string" &&
+    (color.startsWith("#") || color.startsWith("rgb"));
+
   return (
     <Chip
       variant={props.variant || "outlined"}
@@ -10,9 +18,15 @@ export default function Pill(props: ChipProps) {
         borderRadius: "999px",
         fontWeight: 600,
         textTransform: "capitalize",
-        padding: "0.5rem",
-        ...props.sx,
+        px: 1.5,
+        ...(isCustomColor && {
+          borderColor: color,
+          color: props.variant === "filled" ? "#fff" : color,
+          backgroundColor: props.variant === "filled" ? color : "transparent",
+        }),
+        ...sx,
       }}
+      color={isCustomColor ? undefined : (color as ChipProps["color"])}
       {...props}
     />
   );

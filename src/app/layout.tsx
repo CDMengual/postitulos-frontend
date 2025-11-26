@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ClientThemeProvider from "@/components/providers/ClientThemeProvider";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Postítulos Docentes DPES",

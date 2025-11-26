@@ -1,5 +1,6 @@
 // src/constants/postituloTypes.ts
-
+{
+  /* 
 import { ChipProps } from "@mui/material";
 
 export const postituloTypes: Record<
@@ -15,4 +16,6 @@ export const postituloTypes: Record<
 export function getPostituloTypeMeta(tipo?: string) {
   if (!tipo) return postituloTypes.DEFAULT;
   return postituloTypes[tipo] || postituloTypes.DEFAULT;
+}
+*/
 }

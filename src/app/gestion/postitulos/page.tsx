@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Button,
@@ -12,7 +13,6 @@ import {
   MenuItem,
   Stack,
   Typography,
-  CircularProgress,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -21,9 +21,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import api from "@/services/api";
 import { Postitulo } from "@/types/postitulo";
-import styles from "./Postitulos.module.css";
-import { getPostituloTypeMeta } from "@/constants/postituloTypes";
+import { getPostituloTypeMeta } from "@/constants/pillColor";
 import Pill from "@/components/ui/Pill";
+import PostituloFormDialog from "./components/PostituloFormDialog";
 
 interface ApiResponse {
   success: boolean;
@@ -33,21 +33,23 @@ interface ApiResponse {
 }
 
 export default function PostitulosPage() {
+  const router = useRouter();
   const [postitulos, setPostitulos] = useState<Postitulo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuPostitulo, setMenuPostitulo] = useState<Postitulo | null>(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedPostitulo, setSelectedPostitulo] = useState<Postitulo | null>(
+    null
+  );
   const openMenu = Boolean(anchorEl);
 
   const getPostitulos = async () => {
-    setLoading(true);
     try {
       const res = await api.get<ApiResponse>("/postitulos");
       setPostitulos(res.data.data);
     } catch (error) {
       console.error("Error getting postitulos:", error);
     } finally {
-      setLoading(false);
     }
   };
 
@@ -68,6 +70,11 @@ export default function PostitulosPage() {
     setMenuPostitulo(null);
   };
 
+  const handleView = () => {
+    if (menuPostitulo) router.push(`/gestion/postitulos/${menuPostitulo.id}`);
+    handleMenuClose();
+  };
+
   return (
     <Box p={3}>
       <Stack
@@ -79,53 +86,66 @@ export default function PostitulosPage() {
         <Typography variant="h5" fontWeight={600}>
           Postítulos
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setSelectedPostitulo(null);
+            setOpenForm(true);
+          }}
+        >
           Nuevo Postítulo
         </Button>
       </Stack>
 
-      {loading ? (
-        <Stack alignItems="center" mt={5}>
-          <CircularProgress />
-        </Stack>
-      ) : (
-        <Stack spacing={3}>
-          {postitulos.map((p) => (
-            <Card key={p.id} className={styles.card}>
-              <CardHeader
-                title={
-                  <div className={styles.cardHeader}>
-                    <Typography className={styles.cardTitle}>
-                      {p.nombre}
-                    </Typography>
-                    <Box style={{ marginTop: "2px" }}>
+      <Stack spacing={3}>
+        {postitulos.map((p) => (
+          <Card key={p.id} variant="hoverable">
+            <CardHeader
+              title={
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="start"
+                >
+                  <Typography className="cardTitle">{p.nombre}</Typography>
+
+                  <Stack direction="row" spacing={1} flexWrap="wrap">
+                    {p.tipos?.length > 0 ? (
+                      p.tipos.map((t) => (
+                        <Pill
+                          key={t.id}
+                          label={getPostituloTypeMeta(t.tipo).label}
+                          color={getPostituloTypeMeta(t.tipo).color}
+                          variant="outlined"
+                        />
+                      ))
+                    ) : (
                       <Pill
-                        label={getPostituloTypeMeta(p.tipo).label}
-                        color={getPostituloTypeMeta(p.tipo).color}
+                        label="Sin tipo"
+                        color="default"
                         variant="outlined"
                       />
-                    </Box>
-                  </div>
-                }
-                subheader={` ${p.resolucion || "Sin resolución"}`}
-                action={
-                  <IconButton onClick={(e) => handleMenuOpen(e, p)}>
-                    <MoreVertIcon />
-                  </IconButton>
-                }
-              />
-              <CardContent className={styles.cardContent}>
-                <Typography className={styles.cardLine}>
-                  <strong>Título:</strong> {p.titulo || "-"}
-                </Typography>
-                <Typography className={styles.cardLine}>
-                  <strong>Coordinadores:</strong> {p.coordinadores || "-"}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </Stack>
-      )}
+                    )}
+                  </Stack>
+                </Stack>
+              }
+              subheader={p.resolucion || "Sin resolución"}
+              action={
+                <IconButton onClick={(e) => handleMenuOpen(e, p)}>
+                  <MoreVertIcon />
+                </IconButton>
+              }
+            />
+
+            <CardContent>
+              <Typography>
+                <strong>Coordinadores:</strong> {p.coordinadores || "-"}
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Stack>
 
       <Menu
         anchorEl={anchorEl}
@@ -133,18 +153,14 @@ export default function PostitulosPage() {
         onClose={handleMenuClose}
         PaperProps={{ sx: { width: 180 } }}
       >
-        <MenuItem
-          onClick={() => {
-            console.log("Ver detalle", menuPostitulo?.id);
-            handleMenuClose();
-          }}
-        >
+        <MenuItem onClick={handleView}>
           <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
           Ver detalle
         </MenuItem>
         <MenuItem
           onClick={() => {
-            console.log("Editar", menuPostitulo?.id);
+            setSelectedPostitulo(menuPostitulo);
+            setOpenForm(true);
             handleMenuClose();
           }}
         >
@@ -161,6 +177,12 @@ export default function PostitulosPage() {
           Eliminar
         </MenuItem>
       </Menu>
+      <PostituloFormDialog
+        open={openForm}
+        onClose={() => setOpenForm(false)}
+        onSaved={getPostitulos}
+        postitulo={selectedPostitulo}
+      />
     </Box>
   );
 }

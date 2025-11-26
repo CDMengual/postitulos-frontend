@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import BackButton from "@/components/ui/BackButton";
 import AulasTable from "./components/AulasTable";
 import AulaFormDialog from "./components/AulaFormDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDeleteDialog";
 import api from "@/services/api";
 import { Aula } from "@/types/aula";
+import { useUserContext } from "@/components/providers/UserProvider";
 
 interface ApiResponse {
   success: boolean;
@@ -17,6 +19,7 @@ interface ApiResponse {
 }
 
 export default function AulasPage() {
+  const { user } = useUserContext();
   const [aulas, setAulas] = useState<Aula[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Aula | null>(null);
@@ -67,41 +70,46 @@ export default function AulasPage() {
   };
 
   return (
-    <Box p={3}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
-        <Typography variant="h5" fontWeight={600}>
-          Aulas
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreate}
+    <>
+      <BackButton sx={{ mb: 2 }} />
+      <Box p={3}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
         >
-          Nueva Aula
-        </Button>
-      </Stack>
+          <Typography variant="h5" fontWeight={600}>
+            Aulas
+          </Typography>
+          {user?.rol === "ADMIN" && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreate}
+            >
+              Crear aula
+            </Button>
+          )}
+        </Stack>
 
-      <AulasTable data={aulas} loading={loading} onDelete={handleDelete} />
-      <AulaFormDialog
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        onSaved={handleFormSuccess}
-      />
-      <ConfirmDialog
-        open={openConfirm}
-        onClose={() => setOpenConfirm(false)}
-        onConfirm={handleConfirmDelete}
-        title="Confirmar eliminación"
-        message="¿Estás seguro de que querés eliminar el aula"
-        highlightText={selected?.nombre}
-        confirmLabel="Eliminar"
-        confirmColor="error"
-      />
-    </Box>
+        <AulasTable data={aulas} loading={loading} onDelete={handleDelete} />
+        <AulaFormDialog
+          open={openForm}
+          onClose={() => setOpenForm(false)}
+          onSaved={handleFormSuccess}
+        />
+        <ConfirmDialog
+          open={openConfirm}
+          onClose={() => setOpenConfirm(false)}
+          onConfirm={handleConfirmDelete}
+          title="Confirmar eliminación"
+          message="¿Estás seguro de que querés eliminar el aula"
+          highlightText={selected?.nombre}
+          confirmLabel="Eliminar"
+          confirmColor="error"
+        />
+      </Box>
+    </>
   );
 }

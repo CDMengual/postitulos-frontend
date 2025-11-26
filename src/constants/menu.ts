@@ -5,6 +5,8 @@ import {
   Description,
   Domain,
   CoPresent,
+  Person,
+  CalendarMonth,
 } from "@mui/icons-material";
 
 import { UserRole } from "@/types/user";
@@ -37,13 +39,25 @@ export const menuItems: Array<{
     label: "Usuarios",
     path: "/gestion/usuarios",
     roles: ["ADMIN"],
-    icon: People,
+    icon: Person,
   },
   {
     label: "Institutos",
     path: "/gestion/institutos",
     roles: ["ADMIN"],
     icon: Domain,
+  },
+  {
+    label: "Cursantes",
+    path: "/gestion/cursantes",
+    roles: ["ADMIN"],
+    icon: People,
+  },
+  {
+    label: "Cohortes",
+    path: "/gestion/cohortes",
+    roles: ["ADMIN"],
+    icon: CalendarMonth,
   },
   {
     label: "Formularios",

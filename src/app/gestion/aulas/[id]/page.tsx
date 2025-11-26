@@ -8,19 +8,18 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CircularProgress,
   Stack,
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import api from "@/services/api";
+import BackButton from "@/components/ui/BackButton";
 import { Aula } from "@/types/aula";
-import styles from "../aulas.module.css";
 import ConfirmDialog from "@/components/ui/ConfirmDeleteDialog";
 import CursantesTable from "./components/CursantesTable";
+import CursanteAddDialog from "./components/CursanteAddDialog";
 import Pill from "@/components/ui/Pill";
-import { getPostituloTypeMeta } from "@/constants/postituloTypes";
-import CursantesUploadDialog from "./components/CursantesUploadDialog";
+import { getEstadoCohorteMeta } from "@/constants/pillColor";
 
 interface ApiResponse {
   success: boolean;
@@ -33,9 +32,8 @@ export default function AulaDetailPage() {
   const [aula, setAula] = useState<Aula | null>(null);
   const [loading, setLoading] = useState(true);
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [openUpload, setOpenUpload] = useState(false); // ✅ nuevo estado para el modal
+  const [openAdd, setOpenAdd] = useState(false);
 
-  // 🔹 Obtener datos del aula
   const getAula = async () => {
     setLoading(true);
     try {
@@ -50,114 +48,94 @@ export default function AulaDetailPage() {
 
   useEffect(() => {
     if (id) getAula();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // 🔹 Abrir modal de carga
-  const handleUploadCursantes = () => {
-    setOpenUpload(true);
-  };
+  if (!aula) return null;
 
-  // 🔹 Callback cuando se cargaron cursantes correctamente
-  const handleImported = () => {
-    getAula(); // vuelve a traer los datos actualizados
-  };
-
-  if (loading)
-    return (
-      <Stack alignItems="center" mt={5}>
-        <CircularProgress />
-      </Stack>
-    );
-
-  if (!aula)
-    return (
-      <Typography color="text.secondary" mt={3}>
-        Aula no encontrada
-      </Typography>
-    );
+  const estadoMeta = getEstadoCohorteMeta(aula.cohorte?.estado);
 
   return (
-    <Box p={3}>
-      {/* 🔹 Card de información general */}
-      <Card className={styles.card}>
-        <CardHeader
-          title={
-            <div className={styles.cardHeader}>
-              <Typography variant="h6" fontWeight={600}>
-                {aula.nombre}
-              </Typography>
-              <Box style={{ marginTop: "2px" }}>
-                <Pill
-                  label={getPostituloTypeMeta(aula.postitulo?.tipo).label}
-                  color={getPostituloTypeMeta(aula.postitulo?.tipo).color}
-                  variant="outlined"
-                />
-              </Box>
-            </div>
-          }
-          subheader={`Cohorte ${aula.cohorte} — ${aula.postitulo?.nombre}`}
-        />
-        <CardContent className={styles.cardContent}>
-          <Stack>
-            <Typography className={styles.cardLine}>
-              <strong>Código:</strong> {aula.codigo}
+    <>
+      <BackButton backUrl="/gestion/aulas" />
+      <Box p={3}>
+        {/* 🔹 Información general */}
+        <Card variant="hoverable">
+          <CardHeader
+            title={
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="start"
+              >
+                <Typography className="cardTitle">{aula.codigo}</Typography>
+                <Pill label={estadoMeta.label} color={estadoMeta.color} />
+              </Stack>
+            }
+            subheader={
+              <>
+                <Typography variant="body2" color="text.secondary">
+                  {aula.cohorte?.postitulo?.nombre}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Cohorte: {aula.cohorte?.nombre}
+                </Typography>
+              </>
+            }
+          />
+          <CardContent>
+            <Typography>
+              <strong>Instituto:</strong>{" "}
+              {aula.instituto?.nombre || "No asignado"}
             </Typography>
-            <Typography className={styles.cardLine}>
+            <Typography>
               <strong>Referente(s):</strong>{" "}
-              {aula.referentes
-                ?.map((r) => `${r.nombre} ${r.apellido}`)
-                .join(", ") || "-"}
+              {aula.referentes?.length
+                ? aula.referentes
+                    .map((r) => `${r.nombre} ${r.apellido}`)
+                    .join(", ")
+                : "-"}
             </Typography>
-          </Stack>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* 🔹 Tabla de cursantes */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-      >
-        <Typography variant="h6" fontWeight={600}>
-          Cursantes
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleUploadCursantes}
-        >
-          {aula.cursantesData?.length ? "Agregar Cursantes" : "Cargar lista"}
-        </Button>
-      </Stack>
+        {/* 🔹 Acciones */}
+        <Stack direction="row" justifyContent="flex-end" mt={2} mb={2}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenAdd(true)}
+          >
+            Inscribir cursantes
+          </Button>
+        </Stack>
 
-      {aula.cursantesData && aula.cursantesData.length > 0 ? (
-        <CursantesTable data={aula.cursantesData} />
-      ) : (
-        <Typography color="text.secondary" mt={2}>
-          No hay cursantes cargados.
-        </Typography>
-      )}
+        {/* 🔹 Tabla de cursantes */}
+        <CursantesTable
+          data={aula.cursantes}
+          aulaId={Number(id)}
+          onDeleted={getAula}
+        />
 
-      {/* 🔹 Modal de carga de cursantes */}
-      <CursantesUploadDialog
-        open={openUpload}
-        onClose={() => setOpenUpload(false)}
-        aulaId={Number(id)}
-        onImported={handleImported}
-      />
+        {/* 🔹 Modal unificado */}
+        <CursanteAddDialog
+          open={openAdd}
+          onClose={() => setOpenAdd(false)}
+          aulaId={Number(id)}
+          onCreated={getAula}
+        />
 
-      {/* 🔹 Modal de confirmación (si lo necesitás para eliminar) */}
-      <ConfirmDialog
-        open={openConfirm}
-        onClose={() => setOpenConfirm(false)}
-        onConfirm={() => console.log("Confirmado")}
-        title="Eliminar aula"
-        message="¿Seguro que querés eliminar el aula"
-        highlightText={aula.nombre}
-        confirmLabel="Eliminar"
-        confirmColor="error"
-      />
-    </Box>
+        <ConfirmDialog
+          open={openConfirm}
+          onClose={() => setOpenConfirm(false)}
+          onConfirm={() => console.log("Confirmado")}
+          title="Eliminar aula"
+          message="¿Seguro que querés eliminar el aula"
+          highlightText={aula.codigo}
+          confirmLabel="Eliminar"
+          confirmColor="error"
+        />
+      </Box>
+    </>
   );
 }

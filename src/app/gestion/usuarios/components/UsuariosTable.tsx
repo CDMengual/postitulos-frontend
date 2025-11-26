@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import {
   Box,
   IconButton,
-  Stack,
-  Chip,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+
+import {
+  MoreVert as MoreVertIcon,
+  Delete as DeleteIcon,
+  Visibility as VisibilityIcon,
+  Edit as EditIcon,
+} from "@mui/icons-material";
 import { User } from "@/types/user";
+import Pill from "@/components/ui/Pill";
+import { getRolMeta } from "@/constants/pillColor";
 
 interface Props {
   data: User[];
@@ -30,6 +35,7 @@ export default function UsuarioTable({
   onEdit,
   onDelete,
 }: Props) {
+  const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<User | null>(null);
   const open = Boolean(anchorEl);
@@ -54,12 +60,16 @@ export default function UsuarioTable({
     handleMenuClose();
   };
 
+  const handleView = () => {
+    if (selectedRow) router.push(`/gestion/usuarios/${selectedRow.id}`);
+    handleMenuClose();
+  };
+
   const columns: GridColDef[] = [
     { field: "nombre", headerName: "Nombre", flex: 1, minWidth: 120 },
     { field: "apellido", headerName: "Apellido", flex: 1, minWidth: 120 },
     { field: "dni", headerName: "DNI", flex: 0.8, minWidth: 100 },
     { field: "email", headerName: "Email", flex: 1.5, minWidth: 200 },
-    { field: "celular", headerName: "Celular", flex: 1, minWidth: 120 },
     {
       field: "instituto",
       headerName: "Instituto",
@@ -74,25 +84,16 @@ export default function UsuarioTable({
       minWidth: 120,
       valueGetter: (value, row) => row.instituto?.distrito?.nombre || "-",
     },
-    {
-      field: "region",
-      headerName: "Región",
-      flex: 0.5,
-      minWidth: 50,
-      valueGetter: (value, row) => row.instituto?.distrito?.region?.id || "-",
-    },
+
     {
       field: "rol",
       headerName: "Rol",
       flex: 0.8,
       minWidth: 100,
-      renderCell: (params: GridRenderCellParams<User>) => (
-        <Chip
-          label={params.row.rol}
-          color={params.row.rol === "ADMIN" ? "primary" : "default"}
-          size="small"
-        />
-      ),
+      renderCell: (params: GridRenderCellParams<User>) => {
+        const meta = getRolMeta(params.row.rol);
+        return <Pill label={meta.label} color={meta.color} />;
+      },
     },
     {
       field: "acciones",
@@ -117,7 +118,6 @@ export default function UsuarioTable({
       <DataGrid
         rows={data}
         columns={columns}
-        getRowId={(row) => row.id}
         loading={loading}
         disableRowSelectionOnClick
         initialState={{
@@ -134,6 +134,12 @@ export default function UsuarioTable({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
+        <MenuItem onClick={handleView}>
+          <ListItemIcon>
+            <VisibilityIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Ver detalle" />
+        </MenuItem>
         <MenuItem onClick={handleEdit}>
           <ListItemIcon>
             <EditIcon fontSize="small" />

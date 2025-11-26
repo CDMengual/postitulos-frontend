@@ -36,42 +36,16 @@ export default function ConfirmDeleteDialog({
   highlightText,
 }: ConfirmDeleteDialogProps) {
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="xs"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          p: 1,
-        },
-      }}
-    >
-      {/* Header con título e ícono de cierre */}
-      <DialogTitle
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          pr: 1,
-          pb: 3,
-        }}
-      >
-        <Typography variant="h6" fontWeight={600}>
-          {title}
-        </Typography>
-        <IconButton
-          onClick={onClose}
-          size="small"
-          sx={{ color: "text.secondary" }}
-        >
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>
+        {title}
+        <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent sx={{ textAlign: "center", py: 3 }}>
-        <Stack alignItems="center" spacing={2}>
+      <DialogContent>
+        <Stack alignItems="center" spacing={2} textAlign="center">
           <Typography variant="body1">
             {message}{" "}
             {highlightText && (
@@ -84,17 +58,11 @@ export default function ConfirmDeleteDialog({
         </Stack>
       </DialogContent>
 
-      {/* Botones de acción */}
-      <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
+      <DialogActions sx={{ justifyContent: "center" }}>
         <Button onClick={onClose} variant="outlined">
           {cancelLabel}
         </Button>
-        <Button
-          onClick={onConfirm}
-          color={confirmColor}
-          variant="contained"
-          sx={{ minWidth: 110 }}
-        >
+        <Button onClick={onConfirm} color={confirmColor} variant="contained">
           {confirmLabel}
         </Button>
       </DialogActions>

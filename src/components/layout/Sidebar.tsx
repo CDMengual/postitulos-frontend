@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import {
   Drawer,
@@ -17,18 +17,27 @@ import { MenuOpen, ChevronRight } from "@mui/icons-material";
 import Image from "next/image";
 import { menuItems } from "@/constants/menu";
 import { useUserContext } from "@/components/providers/UserProvider";
+import { useSidebar } from "@/components/providers/SidebarProvider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 
 const drawerWidth = 240;
 const collapsedWidth = 72;
 
 export default function Sidebar() {
+  const router = useRouter();
+  const { setLoading } = useLoading();
   const { user } = useUserContext();
+  const { open, toggle } = useSidebar();
   const pathname = usePathname();
-  const [open, setOpen] = useState(true);
 
   const items = user
     ? menuItems.filter((item) => item.roles.includes(user.rol))
     : [];
+
+  const handleNavigation = async (path: string) => {
+    setLoading(true);
+    router.push(path);
+  };
 
   return (
     <Drawer
@@ -51,7 +60,6 @@ export default function Sidebar() {
           display: "flex",
           alignItems: "center",
           justifyContent: open ? "space-between" : "center",
-          px: 2,
         }}
       >
         {open && (
@@ -63,7 +71,7 @@ export default function Sidebar() {
             priority
           />
         )}
-        <IconButton onClick={() => setOpen((prev) => !prev)}>
+        <IconButton onClick={toggle}>
           {open ? <MenuOpen /> : <ChevronRight />}
         </IconButton>
       </Toolbar>
@@ -73,15 +81,15 @@ export default function Sidebar() {
       <List>
         {items.map((item) => {
           const Icon = item.icon;
+          const selected = pathname === item.path;
           return (
             <ListItemButton
               key={item.path}
-              component={Link}
-              href={item.path}
-              selected={pathname === item.path}
+              onClick={() => handleNavigation(item.path)}
+              selected={selected}
               sx={{
-                justifyContent: open ? "flex-start" : "center",
-                px: open ? 2 : 1,
+                justifyContent: open ? "center" : "center",
+                px: 2,
               }}
             >
               <ListItemIcon
@@ -89,11 +97,12 @@ export default function Sidebar() {
                   minWidth: 0,
                   mr: open ? 2 : "auto",
                   justifyContent: "center",
+                  padding: 0,
                 }}
               >
                 <Icon fontSize="medium" />
               </ListItemIcon>
-              {open && <ListItemText primary={item.label} />}
+              {open && <ListItemText primary={item.label} sx={{ m: 0 }} />}
             </ListItemButton>
           );
         })}
