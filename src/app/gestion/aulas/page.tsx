@@ -8,15 +8,10 @@ import AulasTable from "./components/AulasTable";
 import AulaFormDialog from "./components/AulaFormDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDeleteDialog";
 import api from "@/services/api";
-import { Aula } from "@/types/aula";
 import { useUserContext } from "@/components/providers/UserProvider";
+import {Aula} from "@/types/aula"
 
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: Aula[];
-  meta?: { total: number };
-}
+
 
 export default function AulasPage() {
   const { user } = useUserContext();
@@ -29,7 +24,7 @@ export default function AulasPage() {
   const getAulas = async () => {
     setLoading(true);
     try {
-      const response = await api.get<ApiResponse>("/aulas");
+      const response = await api.get("/aulas");
       setAulas(response.data.data);
     } catch (err) {
       console.error("Error getting aulas:", err);

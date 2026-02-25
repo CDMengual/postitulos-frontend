@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   AppBar,
@@ -100,7 +100,7 @@ export default function Navbar() {
 
             <Divider />
 
-            <MenuItem onClick={() => router.push("/perfil")}>Perfil</MenuItem>
+            <MenuItem onClick={() => router.push("/gestion/perfil")}>Perfil</MenuItem>
             <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
           </Menu>
         </Box>
@@ -108,3 +108,4 @@ export default function Navbar() {
     </AppBar>
   );
 }
+
