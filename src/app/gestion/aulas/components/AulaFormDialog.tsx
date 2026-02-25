@@ -24,6 +24,7 @@ import api from "@/services/api";
 import { useUserContext } from "@/components/providers/UserProvider";
 import { User } from "@/types/user";
 import { Cohorte } from "@/types/cohorte";
+import { appToast } from "@/utils/toast";
 
 type TabValue = "individual" | "masivo";
 
@@ -99,11 +100,11 @@ export default function AulaFormDialog({ open, onClose, onSaved }: Props) {
   const handleCreateIndividual = async () => {
     setLoading(true);
     try {
-      await api.post("/aulas", form);
+      await api.post("/aulass", form);
       onSaved();
       onClose();
     } catch (err) {
-      console.error(err);
+appToast.error();
     } finally {
       setLoading(false);
     }

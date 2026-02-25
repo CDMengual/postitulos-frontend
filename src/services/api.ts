@@ -21,7 +21,7 @@ api.interceptors.response.use(
           // Usuario autenticado pero sin permisos
           window.location.href = "/gestion/forbidden";
           break;
-        case 404:
+        case 409:
           // Recurso no encontrado (por ejemplo aula inexistente)
           window.location.href = "/gestion/not-found";
           break;

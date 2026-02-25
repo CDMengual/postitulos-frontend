@@ -2,7 +2,16 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Card, CardContent, CircularProgress, Container, Divider, Snackbar, Stack, Tab, Tabs } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CircularProgress,
+  Container,
+  Divider,
+  Stack,
+  Tab,
+  Tabs,
+} from "@mui/material";
 import api from "@/services/api";
 import { useUserContext } from "@/components/providers/UserProvider";
 import { Aula } from "@/types/aula";
@@ -10,19 +19,7 @@ import AssignedAulasTab from "./components/AssignedAulasTab";
 import ProfileEditDialog, { ProfileForm } from "./components/ProfileEditDialog";
 import ProfileSummaryCard from "./components/ProfileSummaryCard";
 import SecurityTab, { PasswordForm } from "./components/SecurityTab";
-
-type ToastState = {
-  open: boolean;
-  severity: "success" | "error" | "warning";
-  message: string;
-};
-
-
-const emptyToast: ToastState = {
-  open: false,
-  severity: "success",
-  message: "",
-};
+import { appToast } from "@/utils/toast";
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -34,7 +31,6 @@ export default function PerfilPage() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [loadingAulas, setLoadingAulas] = useState(true);
   const [aulasAsignadas, setAulasAsignadas] = useState<Aula[]>([]);
-  const [toast, setToast] = useState<ToastState>(emptyToast);
 
   const [editForm, setEditForm] = useState<ProfileForm>({
     nombre: "",
@@ -66,34 +62,24 @@ export default function PerfilPage() {
     });
   }, [user, userLoading, router]);
 
-useEffect(() => {
-  if (!user) return;
+  useEffect(() => {
+   
 
-  const loadAulas = async () => {
-    try {
-      setLoadingAulas(true);
-
-      const res = await api.get("/aulas");
-console.log('aulas respuesta', res.data.data)
-      if (!res.data.success) {
-        throw new Error(res.data.message);
+    const loadAulas = async () => {
+      try {
+        setLoadingAulas(true);
+        const res = await api.get<{ data: Aula[] }>("/aulas");
+        setAulasAsignadas(res.data.data ?? []);
+      } catch {
+        setAulasAsignadas([]);
+        appToast.error("No se pudieron cargar las aulas asignadas");
+      } finally {
+        setLoadingAulas(false);
       }
+    };
 
-      setAulasAsignadas(res.data.data);
-    } catch (error) {
-      setAulasAsignadas([]);
-      setToast({
-        open: true,
-        severity: "error",
-        message: "No se pudieron cargar las aulas asignadas",
-      });
-    } finally {
-      setLoadingAulas(false);
-    }
-  };
-
-  loadAulas();
-}, [user]);
+    loadAulas();
+  }, []);
 
   const isProfilePristine = useMemo(() => {
     if (!user) return true;
@@ -134,20 +120,16 @@ console.log('aulas respuesta', res.data.data)
         celular: editForm.celular.trim(),
       };
 
-      await api.patch(`/users/${user.id}`, payload);
+      await appToast.promise(api.patch(`/users/${user.id}`, payload), {
+        loading: "Guardando perfil...",
+        success: "Perfil actualizado correctamente",
+        error: "No se pudieron guardar los cambios del perfil",
+      });
+
       setUser({ ...user, ...payload });
       setOpenEdit(false);
-      setToast({
-        open: true,
-        severity: "success",
-        message: "Perfil actualizado correctamente",
-      });
     } catch {
-      setToast({
-        open: true,
-        severity: "error",
-        message: "No se pudieron guardar los cambios del perfil",
-      });
+      // El mensaje ya se muestra con appToast.promise
     } finally {
       setSavingProfile(false);
     }
@@ -158,53 +140,46 @@ console.log('aulas respuesta', res.data.data)
     if (!user) return;
 
     if (passwordForm.newPassword.length < 8) {
-      setToast({
-        open: true,
-        severity: "warning",
-        message: "La nueva contraseña debe tener al menos 8 caracteres",
-      });
+      appToast.error("La nueva contraseña debe tener al menos 8 caracteres");
       return;
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setToast({
-        open: true,
-        severity: "warning",
-        message: "La confirmacion no coincide con la nueva contraseña",
-      });
+      appToast.error("La confirmación no coincide con la nueva contraseña");
       return;
     }
 
     try {
       setSavingPassword(true);
-      try {
-        await api.patch("/auth/change-password", {
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        });
-      } catch {
-        await api.patch(`/users/${user.id}/password`, {
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        });
-      }
+
+      await appToast.promise(
+        (async () => {
+          try {
+            await api.patch("/auth/change-password", {
+              currentPassword: passwordForm.currentPassword,
+              newPassword: passwordForm.newPassword,
+            });
+          } catch {
+            await api.patch(`/users/${user.id}/password`, {
+              currentPassword: passwordForm.currentPassword,
+              newPassword: passwordForm.newPassword,
+            });
+          }
+        })(),
+        {
+          loading: "Actualizando contraseña...",
+          success: "Contraseña actualizada correctamente",
+          error: "No se pudo actualizar la contraseña",
+        }
+      );
 
       setPasswordForm({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
-      setToast({
-        open: true,
-        severity: "success",
-        message: "Contraseña actualizada correctamente",
-      });
     } catch {
-      setToast({
-        open: true,
-        severity: "error",
-        message: "No se pudo actualizar la contraseña",
-      });
+      // El mensaje ya se muestra con appToast.promise
     } finally {
       setSavingPassword(false);
     }
@@ -261,21 +236,6 @@ console.log('aulas respuesta', res.data.data)
         onChange={handleEditChange}
         onSubmit={handleSaveProfile}
       />
-
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={3000}
-        onClose={() => setToast(emptyToast)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          severity={toast.severity}
-          variant="filled"
-          onClose={() => setToast(emptyToast)}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 }
