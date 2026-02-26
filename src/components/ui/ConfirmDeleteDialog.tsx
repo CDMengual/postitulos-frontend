@@ -9,13 +9,15 @@ import {
   Typography,
   IconButton,
   Stack,
+  CircularProgress,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title?: string;
   message?: string;
   confirmLabel?: string;
@@ -35,11 +37,31 @@ export default function ConfirmDeleteDialog({
   confirmColor = "error",
   highlightText,
 }: ConfirmDeleteDialogProps) {
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) setLoading(false);
+  }, [open]);
+
+  const handleClose = () => {
+    if (loading) return;
+    onClose();
+  };
+
+  const handleConfirm = async () => {
+    try {
+      setLoading(true);
+      await Promise.resolve(onConfirm());
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle>
         {title}
-        <IconButton onClick={onClose} size="small">
+        <IconButton onClick={handleClose} size="small" disabled={loading}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -59,11 +81,11 @@ export default function ConfirmDeleteDialog({
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: "center" }}>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={handleClose} variant="outlined" disabled={loading}>
           {cancelLabel}
         </Button>
-        <Button onClick={onConfirm} color={confirmColor} variant="contained">
-          {confirmLabel}
+        <Button onClick={handleConfirm} color={confirmColor} variant="contained" disabled={loading}>
+          {loading ? <CircularProgress color="inherit" /> : confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>
