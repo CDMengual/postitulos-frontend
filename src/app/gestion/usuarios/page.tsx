@@ -8,6 +8,7 @@ import UsuariosFormDialog from "./components/UsuarioFormDialog";
 import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
 import api from "@/services/api";
 import { User } from "@/types/user";
+import { appToast } from "@/utils/toast";
 
 interface ApiResponse {
   success: boolean;
@@ -31,8 +32,8 @@ export default function UsuariosPage() {
       const response = await api.get<ApiResponse>("/users");
       const users = response.data.data;
       setUsuarios(users);
-    } catch (err) {
-      console.error("Error getting users:", err);
+    } catch {
+      appToast.error();
     } finally {
       setLoading(false);
     }
@@ -61,9 +62,10 @@ export default function UsuariosPage() {
     if (!selected) return;
     try {
       await api.delete(`/users/${selected.id}`);
+      appToast.success("Usuario eliminado con éxito");
       getUsers();
-    } catch (err) {
-      console.error("Error deleting user:", err);
+    } catch {
+      appToast.error();
     } finally {
       setOpenConfirm(false);
     }
@@ -76,20 +78,11 @@ export default function UsuariosPage() {
 
   return (
     <Box p={3}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" fontWeight={600}>
           Usuarios
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreate}
-        >
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Nuevo Usuario
         </Button>
       </Stack>

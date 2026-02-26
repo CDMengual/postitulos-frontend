@@ -9,10 +9,12 @@ import {
   TextField,
   Stack,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { User } from "@/types/user";
+import { appToast } from "@/utils/toast";
 
 interface Props {
   open: boolean;
@@ -32,26 +34,21 @@ interface UserFormData {
   institutoId?: number | null;
 }
 
-export default function UsuarioFormDialog({
-  open,
-  onClose,
-  onSaved,
-  user,
-}: Props) {
-  const [form, setForm] = useState<UserFormData>({
-    nombre: "",
-    apellido: "",
-    dni: "",
-    email: "",
-    celular: "",
-    rol: "REFERENTE",
-    password: "",
-    institutoId: null,
-  });
+const INITIAL_FORM: UserFormData = {
+  nombre: "",
+  apellido: "",
+  dni: "",
+  email: "",
+  celular: "",
+  rol: "REFERENTE",
+  password: "",
+  institutoId: null,
+};
 
-  const [institutos, setInstitutos] = useState<
-    { id: number; nombre: string }[]
-  >([]);
+export default function UsuarioFormDialog({ open, onClose, onSaved, user }: Props) {
+  const [form, setForm] = useState<UserFormData>(INITIAL_FORM);
+
+  const [institutos, setInstitutos] = useState<{ id: number; nombre: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   // cargar institutos disponibles
@@ -83,27 +80,36 @@ export default function UsuarioFormDialog({
         institutoId: user.institutoId ?? null,
       });
     } else {
-      setForm({
-        nombre: "",
-        apellido: "",
-        dni: "",
-        email: "",
-        celular: "",
-        rol: "REFERENTE",
-        password: "",
-        institutoId: null,
-      });
+      setForm(INITIAL_FORM);
     }
-  }, [user]);
+  }, [user, open]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === "institutoId") {
+      setForm((prev) => ({ ...prev, institutoId: value === "" ? null : Number(value) }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const isFormValid =
+    form.nombre.trim().length > 0 &&
+    form.apellido.trim().length > 0 &&
+    form.dni.trim().length > 0 &&
+    form.email.trim().length > 0 &&
+    form.celular.trim().length > 0 &&
+    form.rol.trim().length > 0 &&
+    (user ? true : (form.password ?? "").trim().length > 0);
+
+  const handleClose = () => {
+    setForm(INITIAL_FORM);
+    onClose();
+  };
+
   const handleSubmit = async () => {
+    if (!isFormValid) return;
+
     try {
       setLoading(true);
       const payload = { ...form };
@@ -114,17 +120,23 @@ export default function UsuarioFormDialog({
         await api.post("/users", { ...form });
       }
 
+      if (user) {
+        appToast.success("Usuario actualizado con éxito");
+      } else {
+        appToast.success("Usuario creado con éxito");
+      }
+
       onSaved();
-      onClose();
-    } catch (err) {
-      console.error("Error guardando usuario:", err);
+      handleClose();
+    } catch {
+      appToast.error();
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>{user ? "Editar Usuario" : "Nuevo Usuario"}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} mt={1}>
@@ -134,6 +146,7 @@ export default function UsuarioFormDialog({
             value={form.nombre}
             onChange={handleChange}
             fullWidth
+            required
           />
           <TextField
             label="Apellido"
@@ -141,6 +154,7 @@ export default function UsuarioFormDialog({
             value={form.apellido}
             onChange={handleChange}
             fullWidth
+            required
           />
           <TextField
             label="DNI"
@@ -148,6 +162,7 @@ export default function UsuarioFormDialog({
             value={form.dni}
             onChange={handleChange}
             fullWidth
+            required
           />
           <TextField
             label="Email"
@@ -156,6 +171,7 @@ export default function UsuarioFormDialog({
             value={form.email}
             onChange={handleChange}
             fullWidth
+            required
           />
           <TextField
             label="Celular"
@@ -163,6 +179,7 @@ export default function UsuarioFormDialog({
             value={form.celular}
             onChange={handleChange}
             fullWidth
+            required
           />
           <TextField
             select
@@ -171,6 +188,7 @@ export default function UsuarioFormDialog({
             value={form.rol}
             onChange={handleChange}
             fullWidth
+            required
           >
             <MenuItem value="ADMIN">Admin</MenuItem>
             <MenuItem value="REFERENTE">Referente</MenuItem>
@@ -198,16 +216,23 @@ export default function UsuarioFormDialog({
               name="password"
               type="password"
               value={form.password}
-              onChange={handleChange}
-              fullWidth
-            />
-          )}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
+            )}
         </Stack>
       </DialogContent>
       <DialogActions sx={{ my: 2 }}>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {user ? "Guardar cambios" : "Crear usuario"}
+        <Button onClick={handleClose}>Cancelar</Button>
+        <Button onClick={handleSubmit} variant="contained" disabled={loading || !isFormValid}>
+          {loading ? (
+            <CircularProgress size={16} color="inherit" />
+          ) : user ? (
+            "Guardar cambios"
+          ) : (
+            "Crear usuario"
+          )}
         </Button>
       </DialogActions>
     </Dialog>
