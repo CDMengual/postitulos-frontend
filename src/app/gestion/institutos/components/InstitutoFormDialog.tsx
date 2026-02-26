@@ -9,15 +9,20 @@ import {
   TextField,
   Stack,
   Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import api from "@/services/api";
+import { Instituto } from "@/types/instituto";
+import { appToast } from "@/utils/toast";
+import { withCache } from "@/utils/cache";
 
-interface Instituto {
-  id?: number;
+interface InstitutoFormValues {
   nombre: string;
-  distritoId?: number | null;
+  distritoId: number | null;
 }
+
+type EditableInstituto = Instituto & { distritoId?: number | null };
 
 interface Distrito {
   id: number;
@@ -25,29 +30,45 @@ interface Distrito {
   regionId: number;
 }
 
+const DISTRITOS_CACHE_KEY = "distritos:list";
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+const normalizeText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
 interface Props {
   open: boolean;
   onClose: () => void;
   onSaved: () => void;
-  instituto?: Instituto | null;
+  instituto?: EditableInstituto | null;
 }
 
-export default function InstitutoFormDialog({
-  open,
-  onClose,
-  onSaved,
-  instituto,
-}: Props) {
-  const [form, setForm] = useState<Instituto>({ nombre: "", distritoId: null });
+export default function InstitutoFormDialog({ open, onClose, onSaved, instituto }: Props) {
+  const [form, setForm] = useState<InstitutoFormValues>({
+    nombre: "",
+    distritoId: null,
+  });
   const [distritos, setDistritos] = useState<Distrito[]>([]);
   const [loading, setLoading] = useState(false);
+  const isFormValid = form.nombre.trim().length > 0 && form.distritoId !== null;
 
   useEffect(() => {
     if (!open) return;
     const fetchDistritos = async () => {
       try {
-        const { data } = await api.get("/distritos"); // 🔹 endpoint que deberías tener o crear
-        setDistritos(data.data);
+        const data = await withCache<Distrito[]>(
+          DISTRITOS_CACHE_KEY,
+          async () => {
+            const response = await api.get<{ data: Distrito[] }>("/distritos");
+            return response.data.data ?? [];
+          },
+          { ttl: ONE_WEEK_MS }
+        );
+        setDistritos(data);
       } catch (err) {
         console.error("Error cargando distritos:", err);
       }
@@ -56,9 +77,45 @@ export default function InstitutoFormDialog({
   }, [open]);
 
   useEffect(() => {
-    if (instituto) setForm(instituto);
-    else setForm({ nombre: "", distritoId: null });
-  }, [instituto]);
+    if (!open || !instituto) {
+      setForm({ nombre: "", distritoId: null });
+      return;
+    }
+
+    const rawDistritoId =
+      instituto.distritoId ??
+      (instituto as unknown as { distrito?: { id?: number | null } }).distrito?.id ??
+      null;
+    const distritoId =
+      rawDistritoId === null || rawDistritoId === undefined ? null : Number(rawDistritoId);
+
+    setForm({
+      nombre: instituto.nombre ?? "",
+      distritoId: Number.isNaN(distritoId) ? null : distritoId,
+    });
+  }, [instituto, open]);
+
+  useEffect(() => {
+    if (!instituto || form.distritoId !== null || distritos.length === 0) return;
+    if (!instituto.distritoNombre) return;
+
+    const normalizedDistritoNombre = normalizeText(instituto.distritoNombre);
+    const institutoRegionId =
+      instituto.regionId === null || instituto.regionId === undefined
+        ? null
+        : Number(instituto.regionId);
+
+    const matchedDistrito = distritos.find((d) => {
+      const sameName = normalizeText(d.nombre) === normalizedDistritoNombre;
+      if (!sameName) return false;
+      if (institutoRegionId === null || Number.isNaN(institutoRegionId)) return true;
+      return Number(d.regionId) === institutoRegionId;
+    });
+
+    if (!matchedDistrito) return;
+
+    setForm((prev) => ({ ...prev, distritoId: matchedDistrito.id }));
+  }, [instituto, distritos, form.distritoId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -66,17 +123,30 @@ export default function InstitutoFormDialog({
   };
 
   const handleSubmit = async () => {
+    if (!isFormValid) return;
+
     try {
       setLoading(true);
+      const payload = {
+        nombre: form.nombre.trim(),
+        distritoId: form.distritoId,
+      };
+
       if (instituto?.id) {
-        await api.patch(`/institutos/${instituto.id}`, form);
+        await api.patch(`/institutos/${instituto.id}`, payload);
       } else {
-        await api.post("/institutos", form);
+        await api.post("/institutos", payload);
+      }
+
+      if (instituto?.id) {
+        appToast.success("Instituto actualizado con éxito");
+      } else {
+        appToast.success("Instituto creado con éxito");
       }
       onSaved();
       onClose();
-    } catch (err) {
-      console.error("Error guardando instituto:", err);
+    } catch {
+      appToast.error();
     } finally {
       setLoading(false);
     }
@@ -84,9 +154,7 @@ export default function InstitutoFormDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        {instituto ? "Editar Instituto" : "Nuevo Instituto"}
-      </DialogTitle>
+      <DialogTitle>{instituto ? "Editar Instituto" : "Nuevo Instituto"}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} mt={1}>
           <TextField
@@ -95,12 +163,11 @@ export default function InstitutoFormDialog({
             value={form.nombre}
             onChange={handleChange}
             fullWidth
+            required
           />
           <Autocomplete
             options={distritos}
-            getOptionLabel={(option) =>
-              `${option.nombre} — Región ${option.regionId}`
-            }
+            getOptionLabel={(option) => `${option.nombre} — Región ${option.regionId}`}
             value={distritos.find((d) => d.id === form.distritoId) || null}
             onChange={(_, newValue) =>
               setForm((prev) => ({
@@ -114,6 +181,7 @@ export default function InstitutoFormDialog({
                 label="Distrito"
                 placeholder="Seleccionar distrito"
                 fullWidth
+                required
               />
             )}
             isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -122,8 +190,14 @@ export default function InstitutoFormDialog({
       </DialogContent>
       <DialogActions sx={{ my: 2 }}>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {instituto ? "Guardar cambios" : "Crear instituto"}
+        <Button onClick={handleSubmit} variant="contained" disabled={loading || !isFormValid}>
+          {loading ? (
+            <CircularProgress size={16} color="inherit" />
+          ) : instituto ? (
+            "Guardar cambios"
+          ) : (
+            "Crear instituto"
+          )}
         </Button>
       </DialogActions>
     </Dialog>
