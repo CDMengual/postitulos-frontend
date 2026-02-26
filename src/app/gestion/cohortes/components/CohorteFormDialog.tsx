@@ -35,12 +35,7 @@ interface CohorteFormData {
   cuposListaEspera: number | "";
 }
 
-export default function CohorteFormDialog({
-  open,
-  onClose,
-  onSaved,
-  cohorte,
-}: Props) {
+export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: Props) {
   const [form, setForm] = useState<CohorteFormData>({
     anio: new Date().getFullYear(),
     fechaInicio: "",
@@ -79,8 +74,7 @@ export default function CohorteFormDialog({
         anio: cohorte.anio || new Date().getFullYear(),
         fechaInicio: cohorte.fechaInicio?.slice(0, 10) || "",
         fechaFin: cohorte.fechaFin?.slice(0, 10) || "",
-        fechaInicioInscripcion:
-          cohorte.fechaInicioInscripcion?.slice(0, 10) || "",
+        fechaInicioInscripcion: cohorte.fechaInicioInscripcion?.slice(0, 10) || "",
         fechaFinInscripcion: cohorte.fechaFinInscripcion?.slice(0, 10) || "",
         postituloId: cohorte.postitulo?.id || "",
         cupos: cohorte.cupos || "",
@@ -233,7 +227,9 @@ export default function CohorteFormDialog({
       </DialogContent>
 
       <DialogActions sx={{ mt: 2 }}>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button variant="outlined" onClick={onClose}>
+          Cancelar
+        </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
           {cohorte ? "Guardar cambios" : "Crear cohorte"}
         </Button>

@@ -104,7 +104,7 @@ export default function AulaFormDialog({ open, onClose, onSaved }: Props) {
       onSaved();
       onClose();
     } catch (err) {
-appToast.error();
+      appToast.error();
     } finally {
       setLoading(false);
     }
@@ -132,10 +132,7 @@ appToast.error();
     }
   };
 
-  const totalAsignado = massive.distribucion.reduce(
-    (acc, d) => acc + (Number(d.cantidad) || 0),
-    0
-  );
+  const totalAsignado = massive.distribucion.reduce((acc, d) => acc + (Number(d.cantidad) || 0), 0);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -156,9 +153,7 @@ appToast.error();
                 select
                 label="Cohorte"
                 value={form.cohorteId}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, cohorteId: e.target.value }))
-                }
+                onChange={(e) => setForm((p) => ({ ...p, cohorteId: e.target.value }))}
                 fullWidth
               >
                 <MenuItem value="" disabled>
@@ -175,20 +170,11 @@ appToast.error();
                 <Autocomplete
                   options={referentes}
                   getOptionLabel={(o) =>
-                    `${o.nombre} ${o.apellido} — ${
-                      o.instituto?.nombre ?? "Sin instituto"
-                    }`
+                    `${o.nombre} ${o.apellido} — ${o.instituto?.nombre ?? "Sin instituto"}`
                   }
-                  value={
-                    referentes.find((r) => r.id === Number(form.referenteId)) ||
-                    null
-                  }
-                  onChange={(_, val) =>
-                    setForm((p) => ({ ...p, referenteId: val ? val.id : "" }))
-                  }
-                  renderInput={(params) => (
-                    <TextField {...params} label="Referente" fullWidth />
-                  )}
+                  value={referentes.find((r) => r.id === Number(form.referenteId)) || null}
+                  onChange={(_, val) => setForm((p) => ({ ...p, referenteId: val ? val.id : "" }))}
+                  renderInput={(params) => <TextField {...params} label="Referente" fullWidth />}
                 />
               )}
             </>
@@ -200,9 +186,7 @@ appToast.error();
                 select
                 label="Cohorte"
                 value={massive.cohorteId}
-                onChange={(e) =>
-                  setMassive((p) => ({ ...p, cohorteId: e.target.value }))
-                }
+                onChange={(e) => setMassive((p) => ({ ...p, cohorteId: e.target.value }))}
                 fullWidth
               >
                 <MenuItem value="" disabled>
@@ -231,38 +215,23 @@ appToast.error();
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                 <Stack spacing={1.5}>
                   {massive.distribucion.map((d, i) => (
-                    <Stack
-                      key={i}
-                      direction="row"
-                      alignItems="center"
-                      spacing={2}
-                    >
+                    <Stack key={i} direction="row" alignItems="center" spacing={2}>
                       <Autocomplete
                         options={referentes}
                         sx={{ flex: 1 }}
                         getOptionLabel={(o) =>
-                          `${o.nombre} ${o.apellido} — ${
-                            o.instituto?.nombre ?? "Sin instituto"
-                          }`
+                          `${o.nombre} ${o.apellido} — ${o.instituto?.nombre ?? "Sin instituto"}`
                         }
-                        value={
-                          referentes.find(
-                            (r) => r.id === Number(d.referenteId)
-                          ) || null
-                        }
+                        value={referentes.find((r) => r.id === Number(d.referenteId)) || null}
                         onChange={(_, val) =>
                           setMassive((p) => ({
                             ...p,
                             distribucion: p.distribucion.map((r, idx) =>
-                              idx === i
-                                ? { ...r, referenteId: val ? val.id : "" }
-                                : r
+                              idx === i ? { ...r, referenteId: val ? val.id : "" } : r
                             ),
                           }))
                         }
-                        renderInput={(params) => (
-                          <TextField {...params} label="Referente" />
-                        )}
+                        renderInput={(params) => <TextField {...params} label="Referente" />}
                       />
                       <TextField
                         type="number"
@@ -272,30 +241,21 @@ appToast.error();
                           setMassive((p) => ({
                             ...p,
                             distribucion: p.distribucion.map((r, idx) =>
-                              idx === i
-                                ? { ...r, cantidad: Number(e.target.value) }
-                                : r
+                              idx === i ? { ...r, cantidad: Number(e.target.value) } : r
                             ),
                           }))
                         }
                         sx={{ width: 120 }}
                         inputProps={{ min: 1 }}
                       />
-                      <IconButton
-                        color="error"
-                        onClick={() => handleRemoveReferente(i)}
-                      >
+                      <IconButton color="error" onClick={() => handleRemoveReferente(i)}>
                         <DeleteIcon />
                       </IconButton>
                     </Stack>
                   ))}
                 </Stack>
 
-                <Button
-                  startIcon={<AddIcon />}
-                  onClick={handleAddReferente}
-                  sx={{ mt: 2 }}
-                >
+                <Button startIcon={<AddIcon />} onClick={handleAddReferente} sx={{ mt: 2 }}>
                   Agregar referente
                 </Button>
 
@@ -321,13 +281,11 @@ appToast.error();
       </DialogContent>
 
       <DialogActions sx={{ my: 2 }}>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button variant="outlined" onClick={onClose}>
+          Cancelar
+        </Button>
         {tab === "individual" ? (
-          <Button
-            variant="contained"
-            onClick={handleCreateIndividual}
-            disabled={loading}
-          >
+          <Button variant="contained" onClick={handleCreateIndividual} disabled={loading}>
             Crear aula
           </Button>
         ) : (
@@ -336,9 +294,7 @@ appToast.error();
             disabled={
               loading ||
               !massive.cohorteId ||
-              massive.distribucion.some(
-                (d) => !d.referenteId || d.cantidad <= 0
-              ) ||
+              massive.distribucion.some((d) => !d.referenteId || d.cantidad <= 0) ||
               totalAsignado !== massive.total
             }
             onClick={handleCreateMassive}

@@ -165,7 +165,9 @@ export default function CursanteFormDialog({ open, onClose, onSaved, cursante }:
         </Stack>
       </DialogContent>
       <DialogActions sx={{ my: 2 }}>
-        <Button onClick={handleClose}>Cancelar</Button>
+        <Button variant="outlined" onClick={handleClose}>
+          Cancelar
+        </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading || !isFormValid}>
           {loading ? (
             <CircularProgress size={16} color="inherit" />

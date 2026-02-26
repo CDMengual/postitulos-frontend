@@ -1,6 +1,15 @@
 "use client";
 
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  TextField,
+} from "@mui/material";
 
 export type ProfileForm = {
   nombre: string;
@@ -82,7 +91,9 @@ export default function ProfileEditDialog({
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={onClose}>Cancelar</Button>
+          <Button variant="outlined" onClick={onClose}>
+            Cancelar
+          </Button>
           <Button type="submit" variant="contained" disabled={saving || disableSubmit}>
             {saving ? "Guardando..." : "Guardar cambios"}
           </Button>

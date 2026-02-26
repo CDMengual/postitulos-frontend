@@ -189,7 +189,9 @@ export default function InstitutoFormDialog({ open, onClose, onSaved, instituto 
         </Stack>
       </DialogContent>
       <DialogActions sx={{ my: 2 }}>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button variant="outlined" onClick={onClose}>
+          Cancelar
+        </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading || !isFormValid}>
           {loading ? (
             <CircularProgress size={16} color="inherit" />
