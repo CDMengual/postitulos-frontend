@@ -30,6 +30,15 @@ interface Props {
 
 type TabValue = "buscar" | "crear" | "importar";
 
+interface CursanteCreateForm {
+  nombre: string;
+  apellido: string;
+  dni: string;
+  email: string;
+  celular: string;
+  titulo: string;
+}
+
 export default function CursanteAddDialog({
   open,
   onClose,
@@ -46,7 +55,7 @@ export default function CursanteAddDialog({
   const [selected, setSelected] = useState<Cursante | null>(null);
 
   // 🧾 Crear cursante nuevo
-  const [form, setForm] = useState<Omit<Cursante, "id">>({
+  const [form, setForm] = useState<CursanteCreateForm>({
     nombre: "",
     apellido: "",
     dni: "",
