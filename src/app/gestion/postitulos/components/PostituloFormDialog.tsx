@@ -9,14 +9,15 @@ import {
   TextField,
   Stack,
   MenuItem,
-  IconButton,
   Typography,
+  CircularProgress
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import api from "@/services/api";
 import { Postitulo } from "@/types/postitulo";
+import { appToast } from "@/utils/toast";
 
 interface Props {
   open: boolean;
@@ -147,10 +148,15 @@ export default function PostituloFormDialog({
         await api.post("/postitulos", payload);
       }
 
+      if (postitulo){
+         appToast.success('Postítulo actualizado con éxito')
+      } else{
+         appToast.success('Postítulo creado con éxito')
+      }
       onSaved();
       handleClose();
-    } catch (err) {
-      console.error("Error guardando postítulo:", err);
+    } catch  {
+      appToast.error()
     } finally {
       setLoading(false);
     }
@@ -354,7 +360,12 @@ export default function PostituloFormDialog({
           Cancelar
         </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {postitulo ? "Guardar cambios" : "Crear Postítulo"}
+          {loading ? (
+         <CircularProgress size={14} color="inherit" />
+          ):(
+ postitulo ? "Guardar cambios" : "Crear Postítulo"
+          )}
+         
         </Button>
       </DialogActions>
     </Dialog>

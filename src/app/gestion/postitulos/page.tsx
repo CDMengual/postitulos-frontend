@@ -24,6 +24,8 @@ import { Postitulo } from "@/types/postitulo";
 import { getPostituloTypeMeta } from "@/constants/pillColor";
 import Pill from "@/components/ui/Pill";
 import PostituloFormDialog from "./components/PostituloFormDialog";
+import { appToast } from "@/utils/toast";
+import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
 
 interface ApiResponse {
   success: boolean;
@@ -38,6 +40,7 @@ export default function PostitulosPage() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuPostitulo, setMenuPostitulo] = useState<Postitulo | null>(null);
   const [openForm, setOpenForm] = useState(false);
+  const [openConfirm, setOpenConfirm] = useState(false);
   const [selectedPostitulo, setSelectedPostitulo] = useState<Postitulo | null>(
     null
   );
@@ -47,8 +50,8 @@ export default function PostitulosPage() {
     try {
       const res = await api.get<ApiResponse>("/postitulos");
       setPostitulos(res.data.data);
-    } catch (error) {
-      console.error("Error getting postitulos:", error);
+    } catch {
+       appToast.error()
     } finally {
     }
   };
@@ -73,6 +76,27 @@ export default function PostitulosPage() {
   const handleView = () => {
     if (menuPostitulo) router.push(`/gestion/postitulos/${menuPostitulo.id}`);
     handleMenuClose();
+  };
+
+  const handleDelete = (postitulo: Postitulo) => {
+    setSelectedPostitulo(postitulo);
+    setOpenConfirm(true);
+    handleMenuClose();
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedPostitulo) return;
+
+    try {
+      await api.delete(`/postitulos/${selectedPostitulo.id}`);
+      appToast.success("Postítulo eliminado correctamente");
+      getPostitulos();
+    } catch {
+      appToast.error();
+    } finally {
+      setOpenConfirm(false);
+      setSelectedPostitulo(null);
+    }
   };
 
   return (
@@ -169,14 +193,29 @@ export default function PostitulosPage() {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            console.log("Eliminar", menuPostitulo?.id);
-            handleMenuClose();
+            if (!menuPostitulo) return;
+            handleDelete(menuPostitulo);
           }}
         >
           <DeleteIcon fontSize="small" sx={{ mr: 1, color: "error.main" }} />
           Eliminar
         </MenuItem>
       </Menu>
+
+      <ConfirmDeleteDialog
+        open={openConfirm}
+        onClose={() => {
+          setOpenConfirm(false);
+          setSelectedPostitulo(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar eliminación"
+        message="¿Estás seguro de que querés eliminar el postítulo"
+        highlightText={selectedPostitulo?.nombre}
+        confirmLabel="Eliminar"
+        confirmColor="error"
+      />
+
       <PostituloFormDialog
         open={openForm}
         onClose={() => setOpenForm(false)}
