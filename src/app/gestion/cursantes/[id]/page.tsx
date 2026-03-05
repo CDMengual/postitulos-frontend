@@ -26,6 +26,7 @@ import {
 } from "@/constants/pillColor";
 import { appToast } from "@/utils/toast";
 import AssignAulaDialog from "./components/AssignAulaDialog";
+import { getEstadoInscripcionCursante } from "@/utils/inscripcionEstado";
 
 interface CursanteApiResponse {
   success: boolean;
@@ -116,15 +117,32 @@ export default function CursanteDetailPage() {
 
   if (!cursante) return null;
 
+  const estadoInscripcionActual = getEstadoInscripcionCursante(cursante);
+  const puedeAsignarAula = estadoInscripcionActual === "ADMITIDO";
+
   return (
     <>
       <BackButton backUrl="/gestion/cursantes" />
       <Box px={3} py={2}>
         <Stack direction="row" justifyContent="flex-end" mb={2}>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenAssign(true)}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenAssign(true)}
+            disabled={!puedeAsignarAula}
+          >
             Asignar aula
           </Button>
         </Stack>
+
+        {!puedeAsignarAula && (
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary">
+              Solo se pueden asignar aulas a cursantes con estado de inscripción
+              &quot;Admitido&quot;.
+            </Typography>
+          </Box>
+        )}
 
         <Stack mb={4}>
           <Accordion defaultExpanded className="customAccordion">
@@ -208,7 +226,7 @@ export default function CursanteDetailPage() {
 
                   <Box flex={1}>
                     <Typography variant="body2" color="text.secondary">
-                      Estado cursante
+                      Estado de inscripción/cursada
                     </Typography>
 
                     <Pill

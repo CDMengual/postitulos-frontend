@@ -24,10 +24,11 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
   };
   const periodo =
     cohorte.fechaInicioInscripcion && cohorte.fechaFinInscripcion
-      ? `${formatDate(cohorte.fechaInicioInscripcion, "short")} al ${formatDate(
-          cohorte.fechaFinInscripcion,
-          "short"
-        )}`
+      ? `${formatDate(cohorte.fechaInicioInscripcion, "short", {
+          timeZone: "UTC",
+        })} al ${formatDate(cohorte.fechaFinInscripcion, "short", {
+          timeZone: "UTC",
+        })}`
       : null;
 
   return (
@@ -35,21 +36,12 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
       <Stack spacing={4}>
         {/* Header con saludo */}
         <Box>
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            color="primary.main"
-            gutterBottom
-          >
+          <Typography variant="h5" fontWeight={700} color="primary.main" gutterBottom>
             Preinscripción
           </Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ lineHeight: 1.8 }}
-          >
-            Por favor, lee atentamente los requisitos detallados y completa
-            todos los datos solicitados para tu postulación.
+          <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+            Por favor, lee atentamente los requisitos detallados y completa todos los datos
+            solicitados para tu postulación.
           </Typography>
         </Box>
 
@@ -66,12 +58,7 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
 
           <Stack spacing={2.5}>
             <Box>
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                fontSize={13}
-                mb={0.5}
-              >
+              <Typography variant="subtitle2" color="text.secondary" fontSize={13} mb={0.5}>
                 Título
               </Typography>
               <Typography variant="body1" fontWeight={500}>
@@ -81,12 +68,7 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
 
             {postitulo?.resolucion && (
               <Box>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  fontSize={13}
-                  mb={0.5}
-                >
+                <Typography variant="subtitle2" color="text.secondary" fontSize={13} mb={0.5}>
                   Resolución
                 </Typography>
                 <Typography variant="body1">{postitulo.resolucion}</Typography>
@@ -95,12 +77,7 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
 
             {postitulo?.planEstudios && (
               <Box>
-                <Typography
-                  variant="subtitle2"
-                  color="text.secondary"
-                  fontSize={13}
-                  mb={0.5}
-                >
+                <Typography variant="subtitle2" color="text.secondary" fontSize={13} mb={0.5}>
                   Plan de Estudios
                 </Typography>
                 <Link
@@ -122,26 +99,13 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
 
             {postitulo?.destinatarios && (
               <Box>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  spacing={0.5}
-                  mb={0.5}
-                >
-                  <PeopleAltOutlinedIcon
-                    sx={{ fontSize: 18, color: "text.secondary" }}
-                  />
-                  <Typography
-                    variant="subtitle2"
-                    color="text.secondary"
-                    fontSize={13}
-                  >
+                <Stack direction="row" alignItems="center" spacing={0.5} mb={0.5}>
+                  <PeopleAltOutlinedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                  <Typography variant="subtitle2" color="text.secondary" fontSize={13}>
                     Destinatarios
                   </Typography>
                 </Stack>
-                <Typography variant="body1">
-                  {postitulo.destinatarios}
-                </Typography>
+                <Typography variant="body1">{postitulo.destinatarios}</Typography>
               </Box>
             )}
           </Stack>
@@ -159,20 +123,13 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
             }}
           >
             <Stack direction="row" alignItems="center" spacing={1.5}>
-              <EventAvailableIcon
-                sx={{ color: "primary.main", fontSize: 24 }}
-              />
+              <EventAvailableIcon sx={{ color: "primary.main", fontSize: 24 }} />
               <Box>
-                <Typography
-                  variant="subtitle2"
-                  color="primary.main"
-                  fontWeight={600}
-                  fontSize={13}
-                >
+                <Typography variant="subtitle2" color="primary.main" fontWeight={600} fontSize={13}>
                   PERÍODO DE INSCRIPCIÓN
                 </Typography>
                 <Typography variant="body2" color="text.primary" mt={0.3}>
-                  {periodo} o hasta agotar cupos
+                  {periodo} o hasta completar el cupo total de inscripción
                 </Typography>
               </Box>
             </Stack>
@@ -191,9 +148,7 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
             }}
           >
             <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
-              <CheckCircleOutlineIcon
-                sx={{ color: "primary.main", fontSize: 26 }}
-              />
+              <CheckCircleOutlineIcon sx={{ color: "primary.main", fontSize: 26 }} />
               <Typography variant="h6" fontWeight={600} color="primary.main">
                 Requisitos excluyentes
               </Typography>
@@ -232,9 +187,7 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
             }}
           >
             <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
-              <CheckCircleOutlineIcon
-                sx={{ color: "info.main", fontSize: 26 }}
-              />
+              <CheckCircleOutlineIcon sx={{ color: "info.main", fontSize: 26 }} />
               <Typography variant="h6" fontWeight={600} color="primary.main">
                 Requisitos prioritarios
               </Typography>
@@ -255,11 +208,7 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
                         flexShrink: 0,
                       }}
                     />
-                    <Typography
-                      variant="body2"
-                      color="text.primary"
-                      lineHeight={1.7}
-                    >
+                    <Typography variant="body2" color="text.primary" lineHeight={1.7}>
                       {req}
                     </Typography>
                   </Box>
@@ -281,20 +230,14 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <InfoOutlinedIcon sx={{ color: "warning.main", fontSize: 24 }} />
             <Box>
-              <Typography
-                variant="subtitle2"
-                color="warning.main"
-                fontWeight={600}
-                fontSize={13}
-              >
+              <Typography variant="subtitle2" color="warning.main" fontWeight={600} fontSize={13}>
                 Importante
               </Typography>
               <Typography variant="body2" color="text.primary" mt={0.3}>
-                Completar este formulario no garantiza la vacante. Una vez
-                procesada la información, se te asignará un ISFD/ISFDyT sede y
-                nos comunicaremos a través del correo electrónico registrado.
-                Para completar la inscripción, deberás enviar la documentación
-                requerida a la sede correspondiente, donde será validada.
+                Completar este formulario no garantiza la vacante. Una vez procesada la información,
+                se te asignará un ISFD/ISFDyT sede y nos comunicaremos a través del correo
+                electrónico registrado. Para completar la inscripción, deberás enviar la
+                documentación requerida a la sede correspondiente, donde será validada.
               </Typography>
             </Box>
           </Stack>

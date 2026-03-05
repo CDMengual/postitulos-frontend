@@ -6,6 +6,7 @@ import {
   TextField,
   MenuItem,
   Autocomplete,
+  Checkbox,
   FormControl,
   FormLabel,
   RadioGroup,
@@ -32,8 +33,10 @@ interface Distrito {
 interface FormDataState {
   distritoId: number | null;
   regionId: number | null;
-  [key: string]: string | number | boolean | null;
+  [key: string]: string | string[] | number | boolean | null;
 }
+
+const getFieldKey = (id: string | undefined, index: number) => id || `campo_${index}`;
 
 export default function FormularioPreview({ formulario }: Props) {
   const [distritos, setDistritos] = useState<Distrito[]>([]);
@@ -59,19 +62,16 @@ export default function FormularioPreview({ formulario }: Props) {
       <Stack spacing={3}>
         {formulario.campos
           .filter((campo) => campo.id !== "region_residencia")
-          .map((campo) => {
-            // Campo especial: distrito_residencia
+          .map((campo, index) => {
+            const key = getFieldKey(campo.id, index);
+
             if (campo.id === "distrito_residencia") {
               return (
                 <Autocomplete
-                  key={campo.id}
+                  key={key}
                   options={distritos}
-                  getOptionLabel={(option) =>
-                    `${option.nombre} — Región ${option.regionId}`
-                  }
-                  value={
-                    distritos.find((d) => d.id === formData.distritoId) || null
-                  }
+                  getOptionLabel={(option) => `${option.nombre} - Region ${option.regionId}`}
+                  value={distritos.find((d) => d.id === formData.distritoId) || null}
                   onChange={(_, newValue) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -88,28 +88,25 @@ export default function FormularioPreview({ formulario }: Props) {
                       required={campo.required}
                     />
                   )}
-                  isOptionEqualToValue={(option, value) =>
-                    option.id === value.id
-                  }
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
                 />
               );
             }
 
-            // Campo especial: nivel_desempenio
             if (campo.id === "nivel_desempenio") {
               return (
                 <TextField
-                  key={campo.id}
+                  key={key}
                   label={campo.label}
                   select
                   fullWidth
                   required={campo.required}
                   variant="outlined"
-                  defaultValue=""
+                  value={(formData[key] as string | undefined) ?? ""}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      [String(campo.id)]: e.target.value,
+                      [key]: e.target.value,
                     }))
                   }
                   SelectProps={{
@@ -124,7 +121,7 @@ export default function FormularioPreview({ formulario }: Props) {
                     },
                   }}
                 >
-                  <MenuItem value="">Seleccione una opción</MenuItem>
+                  <MenuItem value="">Seleccione una opcion</MenuItem>
                   {nivelesDesempenio.map((nivel) => (
                     <MenuItem key={nivel} value={nivel}>
                       {nivel}
@@ -134,21 +131,59 @@ export default function FormularioPreview({ formulario }: Props) {
               );
             }
 
-            // Campos tipo select (genéricos)
             if (campo.type === "select") {
+              if (campo.multiple) {
+                const value = (formData[key] as string[] | undefined) ?? [];
+
+                return (
+                  <Autocomplete
+                    key={key}
+                    multiple
+                    disableCloseOnSelect
+                    options={campo.options ?? []}
+                    value={value}
+                    onChange={(_, newValue) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        [key]: newValue,
+                      }))
+                    }
+                    isOptionEqualToValue={(option, selected) => option === selected}
+                    renderOption={(props, option, { selected }) => {
+                      const { key: optionKey, ...optionProps } = props;
+                      return (
+                        <li key={optionKey} {...optionProps}>
+                          <Checkbox checked={selected} sx={{ mr: 1 }} />
+                          {option}
+                        </li>
+                      );
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={campo.label}
+                        fullWidth
+                        required={campo.required}
+                        placeholder="Seleccione una o mas opciones"
+                      />
+                    )}
+                  />
+                );
+              }
+
               return (
                 <TextField
-                  key={campo.id}
+                  key={key}
                   label={campo.label}
                   select
                   fullWidth
                   required={campo.required}
                   variant="outlined"
-                  defaultValue=""
+                  value={(formData[key] as string | undefined) ?? ""}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      [String(campo.id)]: e.target.value,
+                      [key]: e.target.value,
                     }))
                   }
                   SelectProps={{
@@ -163,7 +198,7 @@ export default function FormularioPreview({ formulario }: Props) {
                     },
                   }}
                 >
-                  <MenuItem value="">Seleccione una opción</MenuItem>
+                  <MenuItem value="">Seleccione una opcion</MenuItem>
                   {campo.options?.map((opt, i) => (
                     <MenuItem key={i} value={opt}>
                       {opt}
@@ -173,11 +208,10 @@ export default function FormularioPreview({ formulario }: Props) {
               );
             }
 
-            // Campos de texto / email / número
             if (["text", "email", "number"].includes(campo.type)) {
               return (
                 <TextField
-                  key={campo.id}
+                  key={key}
                   label={campo.label}
                   type={campo.type}
                   required={campo.required}
@@ -185,53 +219,41 @@ export default function FormularioPreview({ formulario }: Props) {
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      [String(campo.id)]: e.target.value,
+                      [key]: e.target.value,
                     }))
                   }
                 />
               );
             }
 
-            // Campos booleanos
             if (campo.type === "boolean") {
               return (
-                <FormControl key={campo.id} fullWidth>
-                  <FormLabel sx={{ fontWeight: 500, mb: 1 }}>
-                    {campo.label}
-                  </FormLabel>
+                <FormControl key={key} fullWidth>
+                  <FormLabel sx={{ fontWeight: 500, mb: 1 }}>{campo.label}</FormLabel>
                   <RadioGroup
                     row
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        [String(campo.id)]: e.target.value === "true",
+                        [key]: e.target.value === "true",
                       }))
                     }
                   >
-                    <FormControlLabel
-                      value="true"
-                      control={<Radio />}
-                      label="Sí"
-                    />
-                    <FormControlLabel
-                      value="false"
-                      control={<Radio />}
-                      label="No"
-                    />
+                    <FormControlLabel value="true" control={<Radio />} label="Si" />
+                    <FormControlLabel value="false" control={<Radio />} label="No" />
                   </RadioGroup>
                 </FormControl>
               );
             }
 
             return (
-              <Typography key={campo.id} color="text.secondary">
+              <Typography key={key} color="text.secondary">
                 Tipo de campo no soportado: {campo.type}
               </Typography>
             );
           })}
       </Stack>
 
-      {/* Botón de acción */}
       <Stack direction="row" justifyContent="flex-end" mt={6}>
         <Button variant="contained">Enviar</Button>
       </Stack>

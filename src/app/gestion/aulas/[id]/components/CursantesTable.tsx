@@ -121,18 +121,19 @@ export default function CursantesTable({
       headerName: "Estado",
       flex: 1.2,
       renderCell: (params) => {
-        const opciones = ["ACTIVO", "ADEUDA", "BAJA"].map((v) =>
-          getEstadoCursanteMeta(v)
-        );
+        const opciones = ["ACTIVO", "ADEUDA", "BAJA"].map((value) => {
+          const meta = getEstadoCursanteMeta(value);
+          return {
+            value,
+            label: meta.label,
+            color: meta.color as string,
+          };
+        });
 
         return (
           <PillMenu
             value={params.value}
-            options={opciones.map((o) => ({
-              value: o.label.toUpperCase(),
-              label: o.label,
-              color: o.color as string,
-            }))}
+            options={opciones}
             filled
             onChange={async (nuevoValor) => {
               try {

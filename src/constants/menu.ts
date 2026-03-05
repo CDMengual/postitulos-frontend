@@ -7,6 +7,7 @@ import {
   CoPresent,
   Person,
   CalendarMonth,
+  AssignmentTurnedIn,
 } from "@mui/icons-material";
 
 import { UserRole } from "@/types/user";
@@ -52,6 +53,12 @@ export const menuItems: Array<{
     path: "/gestion/cursantes",
     roles: ["ADMIN"],
     icon: People,
+  },
+  {
+    label: "Inscripciones",
+    path: "/gestion/inscripciones",
+    roles: ["ADMIN", "REFERENTE"],
+    icon: AssignmentTurnedIn,
   },
   {
     label: "Cohortes",

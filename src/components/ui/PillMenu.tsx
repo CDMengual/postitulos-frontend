@@ -16,6 +16,7 @@ interface PillMenuProps {
   options: Option[];
   onChange: (newValue: string) => Promise<void> | void;
   filled?: boolean;
+  disabled?: boolean;
 }
 
 export default function PillMenu({
@@ -23,6 +24,7 @@ export default function PillMenu({
   options,
   onChange,
   filled,
+  disabled = false,
 }: PillMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState(false);
@@ -30,16 +32,13 @@ export default function PillMenu({
   const current = options.find((o) => o.value === value) || options[0];
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (!loading) setAnchorEl(event.currentTarget);
+    if (!loading && !disabled) setAnchorEl(event.currentTarget);
   };
 
   const handleSelect = async (val: string) => {
     setAnchorEl(null);
     if (val === value) return;
     setLoading(true);
-
-    // Timeout para testing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
       await onChange(val);
@@ -62,9 +61,10 @@ export default function PillMenu({
         variant={filled ? "filled" : "outlined"}
         onClick={handleClick}
         deleteIcon={loading ? undefined : <ArrowDropDown />}
-        onDelete={!loading ? handleClick : undefined}
+        onDelete={!loading && !disabled ? handleClick : undefined}
         sx={{
-          cursor: loading ? "default" : "pointer",
+          cursor: loading || disabled ? "default" : "pointer",
+          opacity: disabled ? 0.7 : 1,
           "& .MuiChip-deleteIcon": {
             color: filled ? "#fff" : current.color,
           },

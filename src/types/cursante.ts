@@ -1,3 +1,14 @@
+export type EstadoInscripcion =
+  | "INSCRIPTO"
+  | "EN_REVISION"
+  | "ADMITIDO"
+  | "LISTA_ESPERA"
+  | "RECHAZADO";
+
+export type EstadoCursada = "ACTIVO" | "ADEUDA" | "BAJA";
+
+export type EstadoCursante = EstadoInscripcion | EstadoCursada;
+
 export interface Cursante {
   id: number;
   nombre: string;
@@ -6,6 +17,7 @@ export interface Cursante {
   email?: string | null;
   celular?: string | null;
   titulo?: string | null;
+  estadoInscripcion?: EstadoInscripcion;
   createdAt?: string;
   updatedAt?: string;
   // Relación explícita con aulas (cada inscripción)
@@ -20,7 +32,7 @@ export interface CursanteAula {
   id: number;
   cursanteId: number;
   aulaId: number;
-  estado: "ACTIVO" | "ADEUDA" | "BAJA";
+  estado: EstadoCursante;
   documentacion: "VERIFICADA" | "PENDIENTE" | "NO_CORRESPONDE";
   observaciones?: string | null;
   createdAt?: string;

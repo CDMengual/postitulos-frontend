@@ -15,6 +15,7 @@ export interface CampoFormulario {
     | "textarea";
   required?: boolean;
   options?: string[];
+  multiple?: boolean;
   dynamic?: boolean;
   source?: string;
 }

@@ -9,12 +9,15 @@ import {
   Stack,
   TextField,
   MenuItem,
+  Autocomplete,
+  Checkbox,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import { Postitulo } from "@/types/postitulo";
 import { Cohorte } from "@/types/cohorte";
 import { Formulario } from "@/types/formulario";
+import { Instituto } from "@/types/instituto";
 
 interface Props {
   open: boolean;
@@ -33,42 +36,52 @@ interface CohorteFormData {
   formularioId?: number | "";
   cupos: number | "";
   cuposListaEspera: number | "";
+  institutoIds: number[];
 }
 
+const getInitialForm = (): CohorteFormData => ({
+  anio: new Date().getFullYear(),
+  fechaInicio: "",
+  fechaFin: "",
+  fechaInicioInscripcion: "",
+  fechaFinInscripcion: "",
+  postituloId: "",
+  formularioId: "",
+  cupos: "",
+  cuposListaEspera: "",
+  institutoIds: [],
+});
+
 export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: Props) {
-  const [form, setForm] = useState<CohorteFormData>({
-    anio: new Date().getFullYear(),
-    fechaInicio: "",
-    fechaFin: "",
-    fechaInicioInscripcion: "",
-    fechaFinInscripcion: "",
-    postituloId: "",
-    cupos: "",
-    cuposListaEspera: "",
-  });
+  const [form, setForm] = useState<CohorteFormData>(getInitialForm());
 
   const [postitulos, setPostitulos] = useState<Postitulo[]>([]);
   const [formularios, setFormularios] = useState<Formulario[]>([]);
+  const [institutos, setInstitutos] = useState<Instituto[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Cargar postítulos al abrir el modal
   useEffect(() => {
     if (!open) return;
     const fetchData = async () => {
       try {
-        const res = await api.get("/postitulos");
-        setPostitulos(res.data.data);
-        const resForms = await api.get("/formularios");
+        const [resPostitulos, resForms, resInstitutos] = await Promise.all([
+          api.get("/postitulos"),
+          api.get("/formularios"),
+          api.get("/institutos"),
+        ]);
+        setPostitulos(resPostitulos.data.data);
         setFormularios(resForms.data.data);
+        setInstitutos(resInstitutos.data.data);
       } catch (err) {
-        console.error("Error cargando postitulos:", err);
+        console.error("Error cargando datos de cohorte:", err);
       }
     };
     fetchData();
   }, [open]);
 
-  // 🔹 Inicializar o resetear formulario cuando cambia cohorte
   useEffect(() => {
+    if (!open) return;
+
     if (cohorte) {
       setForm({
         anio: cohorte.anio || new Date().getFullYear(),
@@ -77,21 +90,15 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
         fechaInicioInscripcion: cohorte.fechaInicioInscripcion?.slice(0, 10) || "",
         fechaFinInscripcion: cohorte.fechaFinInscripcion?.slice(0, 10) || "",
         postituloId: cohorte.postitulo?.id || "",
+        formularioId: cohorte.formulario?.id || "",
         cupos: cohorte.cupos || "",
         cuposListaEspera: cohorte.cuposListaEspera || "",
+        institutoIds: cohorte.institutos?.map((instituto) => instituto.id) || [],
       });
-    } else {
-      setForm({
-        anio: new Date().getFullYear(),
-        fechaInicio: "",
-        fechaFin: "",
-        fechaInicioInscripcion: "",
-        fechaFinInscripcion: "",
-        postituloId: "",
-        cupos: "",
-        cuposListaEspera: "",
-      });
+      return;
     }
+
+    setForm(getInitialForm());
   }, [cohorte, open]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,11 +109,18 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
   const handleSubmit = async () => {
     try {
       setLoading(true);
+
+      const payload = {
+        ...form,
+        institutoIds: form.institutoIds,
+      };
+
       if (cohorte) {
-        await api.patch(`/cohortes/${cohorte.id}`, form);
+        await api.patch(`/cohortes/${cohorte.id}`, payload);
       } else {
-        await api.post("/cohortes", form);
+        await api.post("/cohortes", payload);
       }
+
       onSaved();
       onClose();
     } catch (err) {
@@ -123,7 +137,7 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
         <Stack spacing={2} mt={1}>
           <TextField
             select
-            label="Postítulo"
+            label="Postitulo"
             name="postituloId"
             value={form.postituloId}
             onChange={handleChange}
@@ -137,13 +151,14 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
           </TextField>
 
           <TextField
-            label="Año"
+            label="Ano"
             name="anio"
             type="number"
             value={form.anio}
             onChange={handleChange}
             fullWidth
           />
+
           <TextField
             select
             label="Formulario"
@@ -160,7 +175,37 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
             ))}
           </TextField>
 
-          {/* 🧩 Fechas de cursada */}
+          <Autocomplete
+            multiple
+            disableCloseOnSelect
+            options={institutos}
+            value={institutos.filter((instituto) => form.institutoIds.includes(instituto.id))}
+            onChange={(_, selectedInstitutos) =>
+              setForm((prev) => ({
+                ...prev,
+                institutoIds: selectedInstitutos.map((instituto) => instituto.id),
+              }))
+            }
+            getOptionLabel={(option) => option.nombre}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            renderOption={(props, option, { selected }) => {
+              const { key: optionKey, ...optionProps } = props;
+              return (
+                <li key={optionKey} {...optionProps}>
+                  <Checkbox checked={selected} sx={{ mr: 1 }} />
+                  {option.nombre}
+                </li>
+              );
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Institutos"
+                placeholder="Seleccionar uno o mas institutos"
+              />
+            )}
+          />
+
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               label="Inicio cursada"
@@ -182,10 +227,9 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
             />
           </Stack>
 
-          {/* 🧩 Fechas de inscripción */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
-              label="Inicio inscripción"
+              label="Inicio inscripcion"
               name="fechaInicioInscripcion"
               type="date"
               value={form.fechaInicioInscripcion}
@@ -194,7 +238,7 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
               fullWidth
             />
             <TextField
-              label="Fin inscripción"
+              label="Fin inscripcion"
               name="fechaFinInscripcion"
               type="date"
               value={form.fechaFinInscripcion}
@@ -204,7 +248,6 @@ export default function CohorteFormDialog({ open, onClose, onSaved, cohorte }: P
             />
           </Stack>
 
-          {/* Cupos */}
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               label="Cupos"

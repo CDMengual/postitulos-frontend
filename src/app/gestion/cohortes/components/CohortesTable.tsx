@@ -15,6 +15,7 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Visibility as VisibilityIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
 } from "@mui/icons-material";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { Cohorte } from "@/types/cohorte";
@@ -61,6 +62,13 @@ export default function CohortesTable({
 
   const handleEdit = () => {
     if (selectedRow) onEdit(selectedRow);
+    handleMenuClose();
+  };
+
+  const handleViewInscripciones = () => {
+    if (selectedRow) {
+      router.push(`/gestion/inscripciones?cohorteId=${selectedRow.id}`);
+    }
     handleMenuClose();
   };
 
@@ -177,6 +185,12 @@ export default function CohortesTable({
             <VisibilityIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Ver detalle" />
+        </MenuItem>
+        <MenuItem onClick={handleViewInscripciones}>
+          <ListItemIcon>
+            <AssignmentTurnedInIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary="Ver inscripciones" />
         </MenuItem>
         <MenuItem onClick={handleEdit}>
           <ListItemIcon>

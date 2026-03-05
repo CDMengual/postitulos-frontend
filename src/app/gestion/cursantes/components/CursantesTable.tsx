@@ -23,6 +23,9 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 import { Cursante } from "@/types/cursante";
+import Pill from "@/components/ui/Pill";
+import { getEstadoCursanteMeta } from "@/constants/pillColor";
+import { getEstadoInscripcionCursante } from "@/utils/inscripcionEstado";
 
 interface Props {
   data: Cursante[];
@@ -78,6 +81,17 @@ export default function CursantesTable({
     { field: "apellido", headerName: "Apellido", flex: 1 },
     { field: "dni", headerName: "DNI", flex: 1 },
     { field: "email", headerName: "Email", flex: 1.5 },
+    {
+      field: "estadoInscripcion",
+      headerName: "Estado inscripcion",
+      flex: 1.2,
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<Cursante>) => {
+        const estado = getEstadoInscripcionCursante(params.row);
+        const meta = getEstadoCursanteMeta(estado);
+        return <Pill label={meta.label} color={meta.color} variant="filled" />;
+      },
+    },
     {
       field: "acciones",
       headerName: "Acciones",
