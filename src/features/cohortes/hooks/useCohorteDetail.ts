@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getCohorte } from "@/features/cohortes/api";
 import { Cohorte } from "@/features/cohortes/model/types";
-import { Instituto } from "@/types/instituto";
+import { Instituto } from "@/features/institutos";
 
 export function useCohorteDetail(id?: string) {
   const [cohorte, setCohorte] = useState<Cohorte | null>(null);

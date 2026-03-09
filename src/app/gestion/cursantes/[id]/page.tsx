@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   Accordion,
@@ -15,97 +15,34 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import BackButton from "@/shared/components/ui/BackButton";
-import api from "@/shared/api/client";
-import { Cursante } from "@/types/cursante";
-import { Aula } from "@/types/aula";
 import Pill from "@/shared/components/ui/Pill";
+import { AssignAulaDialog, useCursanteDetail } from "@/features/cursantes";
 import {
   getDocumentacionCursanteMeta,
   getEstadoCohorteMeta,
   getEstadoCursanteMeta,
 } from "@/constants/pillColor";
-import { appToast } from "@/shared/lib/toast";
-import AssignAulaDialog from "./components/AssignAulaDialog";
-import { getEstadoInscripcionCursante } from "@/shared/lib/inscripcionEstado";
-
-interface CursanteApiResponse {
-  success: boolean;
-  message: string;
-  data: Cursante;
-}
-
-interface AulasApiResponse {
-  success: boolean;
-  message: string;
-  data: Aula[];
-}
 
 export default function CursanteDetailPage() {
   const { id } = useParams();
   const cursanteId = Number(id);
-
-  const [cursante, setCursante] = useState<Cursante | null>(null);
-  const [loading, setLoading] = useState(true);
   const [openAssign, setOpenAssign] = useState(false);
-  const [aulas, setAulas] = useState<Aula[]>([]);
-  const [loadingAulas, setLoadingAulas] = useState(false);
-
-  const getCursante = async () => {
-    if (Number.isNaN(cursanteId)) return;
-
-    try {
-      setLoading(true);
-      const res = await api.get<CursanteApiResponse>(`/cursantes/${cursanteId}`);
-      setCursante(res.data.data);
-    } catch {
-      appToast.error();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getAulas = async () => {
-    try {
-      setLoadingAulas(true);
-      const res = await api.get<AulasApiResponse>("/aulas");
-      setAulas(res.data.data ?? []);
-    } catch {
-      appToast.error("No se pudieron cargar las aulas");
-    } finally {
-      setLoadingAulas(false);
-    }
-  };
+  const {
+    cursante,
+    aulas,
+    loading,
+    loadingAulas,
+    assignedAulaCodes,
+    estadoInscripcionActual,
+    loadAulas,
+    assignAula,
+  } = useCursanteDetail(cursanteId);
 
   useEffect(() => {
-    getCursante();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cursanteId]);
-
-  useEffect(() => {
-    if (!openAssign) return;
-    getAulas();
-  }, [openAssign]);
-
-  const assignedAulaCodes = useMemo(
-    () =>
-      (cursante?.inscripciones ?? [])
-        .map((insc) => insc.aula?.codigo ?? "")
-        .filter((code) => code.trim().length > 0),
-    [cursante]
-  );
-
-  const handleAssignAula = async (aulaId: number) => {
-    if (Number.isNaN(cursanteId)) return;
-
-    try {
-      await api.post(`/cursantes/${cursanteId}/asignar-aula`, { aulaId });
-      appToast.success("Aula asignada correctamente");
-      setOpenAssign(false);
-      await getCursante();
-    } catch {
-      appToast.error("No se pudo asignar el aula");
+    if (openAssign) {
+      void loadAulas();
     }
-  };
+  }, [loadAulas, openAssign]);
 
   if (loading && !cursante) {
     return (
@@ -117,7 +54,6 @@ export default function CursanteDetailPage() {
 
   if (!cursante) return null;
 
-  const estadoInscripcionActual = getEstadoInscripcionCursante(cursante);
   const puedeAsignarAula = estadoInscripcionActual === "ADMITIDO";
   const regionId = cursante.distrito?.regionId ?? cursante.regionId;
 
@@ -139,8 +75,7 @@ export default function CursanteDetailPage() {
         {!puedeAsignarAula && (
           <Box mb={2}>
             <Typography variant="body2" color="text.secondary">
-              Solo se pueden asignar aulas a cursantes con estado de inscripción
-              &quot;Admitido&quot;.
+              Solo se pueden asignar aulas a cursantes con estado de inscripcion &quot;Admitido&quot;.
             </Typography>
           </Box>
         )}
@@ -181,10 +116,9 @@ export default function CursanteDetailPage() {
                   </Typography>
                   <Typography fontWeight={500}>{cursante.celular || "-"}</Typography>
                 </Box>
-
                 <Box flex={0.5}>
                   <Typography variant="body2" color="text.secondary">
-                    Región
+                    Region
                   </Typography>
                   <Typography fontWeight={500}>
                     {regionId !== null && regionId !== undefined ? String(regionId) : "-"}
@@ -216,16 +150,15 @@ export default function CursanteDetailPage() {
           </Accordion>
         </Stack>
 
-        {(cursante.inscripciones ?? []).map((insc) => (
-          <Stack key={insc.id} mb={4}>
+        {(cursante.inscripciones ?? []).map((inscripcion) => (
+          <Stack key={inscripcion.id} mb={4}>
             <Accordion className="customAccordion">
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Stack direction="row" alignItems="center" spacing={3}>
-                  <Typography>{insc.aula?.codigo}</Typography>
-
+                  <Typography>{inscripcion.aula?.codigo}</Typography>
                   <Pill
-                    label={getEstadoCohorteMeta(insc.aula?.cohorte.estado).label}
-                    color={getEstadoCohorteMeta(insc.aula?.cohorte.estado).color}
+                    label={getEstadoCohorteMeta(inscripcion.aula?.cohorte.estado).label}
+                    color={getEstadoCohorteMeta(inscripcion.aula?.cohorte.estado).color}
                     variant="filled"
                   />
                 </Stack>
@@ -238,7 +171,7 @@ export default function CursanteDetailPage() {
                       Postitulo
                     </Typography>
                     <Typography fontWeight={500}>
-                      {insc.aula?.cohorte.postitulo.nombre || "-"}
+                      {inscripcion.aula?.cohorte.postitulo.nombre || "-"}
                     </Typography>
                   </Box>
 
@@ -246,17 +179,16 @@ export default function CursanteDetailPage() {
                     <Typography variant="body2" color="text.secondary">
                       Instituto
                     </Typography>
-                    <Typography fontWeight={500}>{insc.aula?.instituto.nombre}</Typography>
+                    <Typography fontWeight={500}>{inscripcion.aula?.instituto.nombre}</Typography>
                   </Box>
 
                   <Box flex={1}>
                     <Typography variant="body2" color="text.secondary">
                       Estado de cursada
                     </Typography>
-
                     <Pill
-                      label={getEstadoCursanteMeta(insc.estado).label}
-                      color={getEstadoCursanteMeta(insc.estado).color}
+                      label={getEstadoCursanteMeta(inscripcion.estado).label}
+                      color={getEstadoCursanteMeta(inscripcion.estado).color}
                     />
                   </Box>
 
@@ -264,10 +196,9 @@ export default function CursanteDetailPage() {
                     <Typography variant="body2" color="text.secondary">
                       Documentacion
                     </Typography>
-
                     <Pill
-                      label={getDocumentacionCursanteMeta(insc.documentacion).label}
-                      color={getDocumentacionCursanteMeta(insc.documentacion).color}
+                      label={getDocumentacionCursanteMeta(inscripcion.documentacion).label}
+                      color={getDocumentacionCursanteMeta(inscripcion.documentacion).color}
                     />
                   </Box>
                 </Stack>
@@ -278,7 +209,7 @@ export default function CursanteDetailPage() {
                       Observaciones
                     </Typography>
                     <Typography sx={{ fontSize: "0.875rem" }}>
-                      {insc.observaciones || "-"}
+                      {inscripcion.observaciones || "-"}
                     </Typography>
                   </Box>
                 </Stack>
@@ -294,7 +225,10 @@ export default function CursanteDetailPage() {
         assignedAulaCodes={assignedAulaCodes}
         loadingAulas={loadingAulas}
         onClose={() => setOpenAssign(false)}
-        onAssign={handleAssignAula}
+        onAssign={async (aulaId) => {
+          await assignAula(aulaId);
+          setOpenAssign(false);
+        }}
       />
     </>
   );

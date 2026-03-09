@@ -15,8 +15,7 @@ import {
 import BackButton from "@/shared/components/ui/BackButton";
 import Pill from "@/shared/components/ui/Pill";
 import { getRolMeta } from "@/constants/pillColor";
-import { getUsuario } from "@/features/usuarios/api";
-import { User } from "@/features/usuarios/model/types";
+import { getUsuario, User } from "@/features/usuarios";
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -102,7 +101,7 @@ export default function UserDetailPage() {
                   <strong>Distrito:</strong> {user.instituto.distrito?.nombre || "-"}
                 </Typography>
                 <Typography>
-                  <strong>RegiÃ³n:</strong> {user.instituto.distrito?.region?.id || "-"}
+                  <strong>Región:</strong> {user.instituto.distrito?.region?.id || "-"}
                 </Typography>
               </Stack>
             </CardContent>

@@ -24,13 +24,8 @@ import {
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useEffect, useMemo, useState } from "react";
 import { nivelesDesempenio } from "@/constants/niveles";
-import {
-  Distrito,
-  listDistritos,
-  submitInscripcion,
-  SubmitInscripcionError,
-} from "@/features/formularios/api";
-import { Formulario, CampoFormulario } from "@/features/formularios/model/types";
+import { Distrito, listDistritos, submitInscripcion, SubmitInscripcionError } from "@/features/formularios/api";
+import { CampoFormulario, Formulario } from "@/features/formularios/model/types";
 import { CohortePublica } from "@/features/cohortes/model/types";
 import { appToast } from "@/shared/lib/toast";
 
@@ -133,59 +128,55 @@ export default function FormularioForm({ formulario, cohorte }: Props) {
     const dni = getTopLevelValue("dni");
 
     if (!nombre || !apellido || !dni) {
-      appToast.error("CompletÃ¡ nombre, apellido y DNI");
+      appToast.error("Completá nombre, apellido y DNI");
       return;
     }
 
-      const email = getTopLevelValue("email");
-      const celular = getTopLevelValue("celular");
+    const email = getTopLevelValue("email");
+    const celular = getTopLevelValue("celular");
 
-      try {
-        setSubmitting(true);
-      const fileEntries = Object.entries(formData).filter(
-        ([, value]) => value instanceof File
-      ) as Array<[string, File]>;
+    try {
+      setSubmitting(true);
+      const fileEntries = Object.entries(formData).filter(([, value]) => value instanceof File) as Array<
+        [string, File]
+      >;
 
       const datosFormulario: Record<string, string | string[] | number | boolean | null> = {};
-        Object.entries(formData).forEach(([key, value]) => {
+      Object.entries(formData).forEach(([key, value]) => {
         const normalized = normalizeKey(key);
         if (TOP_LEVEL_KEYS.has(normalized)) return;
-
-        if (value instanceof File) {
-            return;
-        }
-
+        if (value instanceof File) return;
         if (value === undefined) return;
         datosFormulario[key] = value as string | number | boolean | null;
       });
 
-        await submitInscripcion({
-          cohorteId: cohorte.id,
-          nombre,
-          apellido,
-          dni,
-          email: email || null,
-          celular: celular || null,
-          datosFormulario,
-          fileEntries,
-        });
-        setSubmitted(true);
-      } catch (err) {
-        if (err instanceof SubmitInscripcionError) {
-          if (err.status === 409 && err.appCode === "INSCRIPCION_DUPLICADA_COHORTE_DNI") {
-            setDuplicateDialogOpen(true);
-            return;
-          }
-
-          if (err.status === 400 && err.message === "La cohorte no tiene cupos disponibles") {
-            appToast.error("La cohorte no tiene cupos disponibles");
-            return;
-          }
+      await submitInscripcion({
+        cohorteId: cohorte.id,
+        nombre,
+        apellido,
+        dni,
+        email: email || null,
+        celular: celular || null,
+        datosFormulario,
+        fileEntries,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      if (err instanceof SubmitInscripcionError) {
+        if (err.status === 409 && err.appCode === "INSCRIPCION_DUPLICADA_COHORTE_DNI") {
+          setDuplicateDialogOpen(true);
+          return;
         }
-        appToast.error("No se pudo enviar la inscripcion");
-      } finally {
-        setSubmitting(false);
+
+        if (err.status === 400 && err.message === "La cohorte no tiene cupos disponibles") {
+          appToast.error("La cohorte no tiene cupos disponibles");
+          return;
+        }
       }
+      appToast.error("No se pudo enviar la inscripción");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -200,7 +191,7 @@ export default function FormularioForm({ formulario, cohorte }: Props) {
         >
           <CheckCircleOutlineIcon color="success" sx={{ fontSize: 72 }} />
           <Typography variant="h4" fontWeight={800} color="primary.main">
-            Recibimos tu inscripcion
+            Recibimos tu inscripción
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 820 }}>
             Gracias por completar el formulario. Recibimos tu inscripción y vamos a procesar la
@@ -315,9 +306,7 @@ export default function FormularioForm({ formulario, cohorte }: Props) {
                             {...params}
                             label={campo.label}
                             required={campo.required}
-                            placeholder={
-                              multiSelectValue.length === 0 ? "Seleccione una o mas opciones" : ""
-                            }
+                            placeholder={multiSelectValue.length === 0 ? "Seleccione una o más opciones" : ""}
                           />
                         )}
                       />
@@ -396,7 +385,7 @@ export default function FormularioForm({ formulario, cohorte }: Props) {
                           }))
                         }
                       >
-                        <FormControlLabel value="true" control={<Radio />} label="Sí­" />
+                        <FormControlLabel value="true" control={<Radio />} label="Sí" />
                         <FormControlLabel value="false" control={<Radio />} label="No" />
                       </RadioGroup>
                     </FormControl>
@@ -444,29 +433,20 @@ export default function FormularioForm({ formulario, cohorte }: Props) {
           </Stack>
 
           <Stack direction="row" justifyContent="flex-end" mt={6}>
-            <Button
-              variant="contained"
-              disabled={!isFormComplete || submitting}
-              onClick={handleSubmit}
-            >
+            <Button variant="contained" disabled={!isFormComplete || submitting} onClick={handleSubmit}>
               {submitting ? <CircularProgress size={16} color="inherit" /> : "Enviar"}
             </Button>
           </Stack>
         </>
       )}
-      <Dialog
-        open={duplicateDialogOpen}
-        onClose={() => setDuplicateDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Inscripcion ya registrada</DialogTitle>
+      <Dialog open={duplicateDialogOpen} onClose={() => setDuplicateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Inscripción ya registrada</DialogTitle>
         <DialogContent dividers>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Ya se registro una inscripcion con este DNI para la cohorte seleccionada.
+            Ya se registró una inscripción con este DNI para la cohorte seleccionada.
           </Typography>
           <Typography variant="body1">
-            Si ingresaste algun dato incorrecto, escribinos a{" "}
+            Si ingresaste algún dato incorrecto, escribinos a{" "}
             <Link href="mailto:postituloseducacionsuperior@abc.gob.ar">
               postituloseducacionsuperior@abc.gob.ar
             </Link>

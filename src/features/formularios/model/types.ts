@@ -1,4 +1,4 @@
-import { Postitulo } from "@/types/postitulo";
+import { Postitulo } from "@/features/postitulos";
 import { Cohorte } from "@/features/cohortes/model/types";
 
 export interface CampoFormulario {

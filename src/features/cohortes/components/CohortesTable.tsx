@@ -2,14 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Box,
-  IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-} from "@mui/material";
+import { Box, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
   Delete as DeleteIcon,
@@ -24,17 +17,11 @@ import { updateCohorteEstado } from "@/features/cohortes/api";
 
 interface Props {
   data: Cohorte[];
-  loading?: boolean;
   onEdit: (cohorte: Cohorte) => void;
   onDelete: (cohorte: Cohorte) => void;
 }
 
-export default function CohortesTable({
-  data,
-  loading,
-  onEdit,
-  onDelete,
-}: Props) {
+export default function CohortesTable({ data, onEdit, onDelete }: Props) {
   const [rows, setRows] = useState<Cohorte[]>(data || []);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedRow, setSelectedRow] = useState<Cohorte | null>(null);
@@ -80,9 +67,7 @@ export default function CohortesTable({
   // 🔹 Actualiza estado local y API
   const handleEstadoChange = async (id: number, newEstado: string) => {
     // ✅ Actualización optimista en UI
-    setRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, estado: newEstado } : r))
-    );
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, estado: newEstado } : r)));
 
     try {
       await updateCohorteEstado(id, newEstado);
@@ -117,8 +102,7 @@ export default function CohortesTable({
         field: "fechaInicio",
         headerName: "Inicio",
         flex: 1,
-        valueGetter: (_, row) =>
-          row.fechaInicio ? row.fechaInicio.slice(0, 10) : "-",
+        valueGetter: (_, row) => (row.fechaInicio ? row.fechaInicio.slice(0, 10) : "-"),
       },
       {
         field: "estado",
@@ -147,10 +131,7 @@ export default function CohortesTable({
         width: 50,
         sortable: false,
         renderCell: (params: GridRenderCellParams<Cohorte>) => (
-          <IconButton
-            size="small"
-            onClick={(e) => handleMenuOpen(e, params.row)}
-          >
+          <IconButton size="small" onClick={(e) => handleMenuOpen(e, params.row)}>
             <MoreVertIcon fontSize="small" />
           </IconButton>
         ),
@@ -164,7 +145,6 @@ export default function CohortesTable({
       <DataGrid
         rows={rows}
         columns={columns}
-        loading={loading}
         getRowId={(row) => row.id}
         disableRowSelectionOnClick
         localeText={{

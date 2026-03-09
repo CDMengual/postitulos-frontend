@@ -2,9 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { Box, Container, Stack, Typography } from "@mui/material";
-import FormularioPreview from "@/features/formularios/components/gestion/FormularioPreview";
-import FormularioInfoCard from "@/features/formularios/components/gestion/FormularioInfoCard";
-import { useFormularioDetail } from "@/features/formularios/hooks/useFormularioDetail";
+import { FormularioInfoCard, FormularioPreview, useFormularioDetail } from "@/features/formularios";
 
 export default function FormularioDetailPage() {
   const params = useParams();

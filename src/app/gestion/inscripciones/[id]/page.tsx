@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
   Box,
@@ -18,43 +18,19 @@ import {
 } from "@mui/material";
 import BackButton from "@/shared/components/ui/BackButton";
 import Pill from "@/shared/components/ui/Pill";
-import api from "@/shared/api/client";
 import {
+  INSCRIPCION_DOCUMENTACIONES,
+  INSCRIPCION_ESTADOS,
   DocumentacionInscripcion,
   EstadoInscripcionPrivada,
-  InscripcionDetalle,
-  InscripcionDetalleApiResponse,
-} from "@/types/inscripcion";
+  useInscripcionDetail,
+} from "@/features/inscripciones";
 import {
   getDocumentacionCursanteMeta,
   getEstadoCohorteMeta,
   getEstadoInscripcionPrivadaMeta,
 } from "@/constants/pillColor";
-import { appToast } from "@/shared/lib/toast";
 import { formatDate } from "@/shared/lib/date";
-
-interface SignedDocumentoResponse {
-  success: boolean;
-  data: {
-    bucket: string;
-    path: string;
-    signedUrl: string;
-    expiresIn: number;
-  };
-}
-
-const ESTADOS: EstadoInscripcionPrivada[] = [
-  "PENDIENTE",
-  "ASIGNADA",
-  "LISTA_ESPERA",
-  "RECHAZADA",
-];
-
-const DOCUMENTACIONES: DocumentacionInscripcion[] = [
-  "VERIFICADA",
-  "PENDIENTE",
-  "NO_CORRESPONDE",
-];
 
 function DataItem({ label, value }: { label: string; value: string }) {
   return (
@@ -124,38 +100,22 @@ function RenderFieldValue({ value }: { value: unknown }) {
 export default function InscripcionDetailPage() {
   const params = useParams();
   const id = Number(params?.id);
-
-  const [inscripcion, setInscripcion] = useState<InscripcionDetalle | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [savingEstado, setSavingEstado] = useState(false);
-  const [savingDocumentacion, setSavingDocumentacion] = useState(false);
-  const [savingObservaciones, setSavingObservaciones] = useState(false);
-  const [openingDniDoc, setOpeningDniDoc] = useState(false);
-  const [openingTituloDoc, setOpeningTituloDoc] = useState(false);
-  const [observacionesDraft, setObservacionesDraft] = useState("");
-
-  const getInscripcion = async () => {
-    if (Number.isNaN(id)) return;
-
-    try {
-      setLoading(true);
-      const response = await api.get<InscripcionDetalleApiResponse>(`/inscripciones/${id}`);
-      setInscripcion(response.data.data);
-    } catch {
-      appToast.error("No se pudo cargar la inscripcion");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getInscripcion();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  useEffect(() => {
-    setObservacionesDraft(inscripcion?.observaciones ?? "");
-  }, [inscripcion?.observaciones]);
+  const {
+    inscripcion,
+    loading,
+    savingEstado,
+    savingDocumentacion,
+    savingObservaciones,
+    openingDniDoc,
+    openingTituloDoc,
+    observacionesDraft,
+    datosFormularioEntries,
+    setObservacionesDraft,
+    changeEstado,
+    changeDocumentacion,
+    openDocumento,
+    saveObservaciones,
+  } = useInscripcionDetail(id);
 
   const estadoMeta = useMemo(
     () => getEstadoInscripcionPrivadaMeta(inscripcion?.estado),
@@ -166,105 +126,15 @@ export default function InscripcionDetailPage() {
     () => getDocumentacionCursanteMeta(inscripcion?.documentacion),
     [inscripcion?.documentacion]
   );
-  const datosFormularioEntries = useMemo(
-    () => Object.entries(inscripcion?.datosFormulario ?? {}),
-    [inscripcion?.datosFormulario]
-  );
 
   const handleEstadoChange = async (event: SelectChangeEvent<EstadoInscripcionPrivada>) => {
-    if (!inscripcion) return;
-
-    const newEstado = event.target.value as EstadoInscripcionPrivada;
-    const previousEstado = inscripcion.estado;
-    if (newEstado === previousEstado) return;
-
-    setInscripcion((prev) => (prev ? { ...prev, estado: newEstado } : prev));
-    setSavingEstado(true);
-
-    try {
-      await api.patch(`/inscripciones/${inscripcion.id}/estado`, { estado: newEstado });
-    } catch {
-      setInscripcion((prev) => (prev ? { ...prev, estado: previousEstado } : prev));
-      appToast.error("No se pudo actualizar el estado");
-    } finally {
-      setSavingEstado(false);
-    }
+    await changeEstado(event.target.value as EstadoInscripcionPrivada);
   };
 
   const handleDocumentacionChange = async (
     event: SelectChangeEvent<DocumentacionInscripcion>
   ) => {
-    if (!inscripcion) return;
-
-    const newDocumentacion = event.target.value as DocumentacionInscripcion;
-    const previousDocumentacion = inscripcion.documentacion;
-    if (newDocumentacion === previousDocumentacion) return;
-
-    setInscripcion((prev) =>
-      prev ? { ...prev, documentacion: newDocumentacion } : prev
-    );
-    setSavingDocumentacion(true);
-
-    try {
-      await api.patch(`/inscripciones/${inscripcion.id}/documentacion`, {
-        documentacion: newDocumentacion,
-      });
-    } catch {
-      setInscripcion((prev) =>
-        prev ? { ...prev, documentacion: previousDocumentacion } : prev
-      );
-      appToast.error("No se pudo actualizar la documentacion");
-    } finally {
-      setSavingDocumentacion(false);
-    }
-  };
-
-  const openSignedDocumento = async (
-    tipo: "dni" | "titulo",
-    setLoadingState: (value: boolean) => void
-  ) => {
-    if (!inscripcion) return;
-
-    setLoadingState(true);
-    try {
-      const response = await api.get<SignedDocumentoResponse>(
-        `/inscripciones/${inscripcion.id}/documentos/${tipo}/url`,
-        { params: { expiresIn: 600 } }
-      );
-      const signedUrl = response.data.data?.signedUrl;
-      if (!signedUrl) {
-        appToast.error("No se pudo obtener la URL del documento");
-        return;
-      }
-
-      window.open(signedUrl, "_blank", "noopener,noreferrer");
-    } catch {
-      appToast.error("No se pudo abrir el documento");
-    } finally {
-      setLoadingState(false);
-    }
-  };
-
-  const handleSaveObservaciones = async () => {
-    if (!inscripcion) return;
-
-    const previousObservaciones = inscripcion.observaciones ?? "";
-    if (observacionesDraft === previousObservaciones) return;
-
-    setSavingObservaciones(true);
-    try {
-      await api.patch(`/inscripciones/${inscripcion.id}`, {
-        observaciones: observacionesDraft,
-      });
-      setInscripcion((prev) =>
-        prev ? { ...prev, observaciones: observacionesDraft } : prev
-      );
-      appToast.success("Observaciones guardadas");
-    } catch {
-      appToast.error("No se pudieron guardar las observaciones");
-    } finally {
-      setSavingObservaciones(false);
-    }
+    await changeDocumentacion(event.target.value as DocumentacionInscripcion);
   };
 
   if (loading && !inscripcion) {
@@ -309,7 +179,7 @@ export default function InscripcionDetailPage() {
                   onChange={handleEstadoChange}
                   disabled={savingEstado}
                 >
-                  {ESTADOS.map((item) => (
+                  {INSCRIPCION_ESTADOS.map((item) => (
                     <MenuItem key={item} value={item}>
                       {getEstadoInscripcionPrivadaMeta(item).label}
                     </MenuItem>
@@ -326,7 +196,7 @@ export default function InscripcionDetailPage() {
                   onChange={handleDocumentacionChange}
                   disabled={savingDocumentacion}
                 >
-                  {DOCUMENTACIONES.map((item) => (
+                  {INSCRIPCION_DOCUMENTACIONES.map((item) => (
                     <MenuItem key={item} value={item}>
                       {getDocumentacionCursanteMeta(item).label}
                     </MenuItem>
@@ -371,7 +241,7 @@ export default function InscripcionDetailPage() {
                 {inscripcion.cohorte.postitulo.nombre} ({inscripcion.cohorte.postitulo.codigo})
               </Typography>
               <Typography variant="body2">
-                Periodo de inscripcion: {" "}
+                Periodo de inscripcion:{" "}
                 {inscripcion.cohorte.fechaInicioInscripcion
                   ? formatDate(inscripcion.cohorte.fechaInicioInscripcion, "short")
                   : "-"}{" "}
@@ -404,10 +274,9 @@ export default function InscripcionDetailPage() {
                 <Button
                   variant="contained"
                   size="small"
-                  onClick={handleSaveObservaciones}
+                  onClick={() => void saveObservaciones()}
                   disabled={
-                    savingObservaciones ||
-                    observacionesDraft === (inscripcion.observaciones ?? "")
+                    savingObservaciones || observacionesDraft === (inscripcion.observaciones ?? "")
                   }
                 >
                   Guardar observaciones
@@ -420,7 +289,7 @@ export default function InscripcionDetailPage() {
                     variant="outlined"
                     size="small"
                     disabled={openingDniDoc}
-                    onClick={() => openSignedDocumento("dni", setOpeningDniDoc)}
+                    onClick={() => void openDocumento("dni")}
                   >
                     Ver DNI adjunto
                   </Button>
@@ -431,9 +300,7 @@ export default function InscripcionDetailPage() {
                     variant="outlined"
                     size="small"
                     disabled={openingTituloDoc}
-                    onClick={() =>
-                      openSignedDocumento("titulo", setOpeningTituloDoc)
-                    }
+                    onClick={() => void openDocumento("titulo")}
                   >
                     Ver titulo adjunto
                   </Button>

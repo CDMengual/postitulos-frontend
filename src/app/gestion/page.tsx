@@ -13,20 +13,20 @@ import {
   Typography,
 } from "@mui/material";
 import { Refresh } from "@mui/icons-material";
-
-import DashboardContent from "@/components/dashboard/DashboardContent";
-import DashboardSummaryCards from "@/components/dashboard/DashboardSummaryCards";
-import DashboardViewHeader from "@/components/dashboard/DashboardViewHeader";
 import {
   DashboardHistoricalFilter,
+  DashboardSummaryCards,
+  DashboardViewHeader,
+  DashboardContent,
   deriveDashboardView,
   formatDateInput,
   sortDashboardPostitulos,
-} from "@/components/dashboard/dashboardSelectors";
-import { DashboardTabValue, getSummaryMetrics } from "@/components/dashboard/dashboardViewConfig";
+  DashboardTabValue,
+  getSummaryMetrics,
+  useDashboard,
+} from "@/features/dashboard";
 import { useUserContext } from "@/shared/components/providers/UserProvider";
-import { DashboardData } from "@/types/dashboard";
-import { DashboardFilters, getDashboard } from "@/services/dashboardService";
+import { DashboardFilters } from "@/features/dashboard";
 import { appToast } from "@/shared/lib/toast";
 
 function createAllTimeFilters(): Required<DashboardFilters> {
@@ -40,27 +40,10 @@ export default function GestionIndex() {
   const router = useRouter();
   const { user, loading: userLoading } = useUserContext();
   const currentYear = new Date().getFullYear();
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTabValue>("current");
   const [selectedHistoricalYear, setSelectedHistoricalYear] =
     useState<DashboardHistoricalFilter>("all");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadDashboard = async (nextFilters: DashboardFilters = createAllTimeFilters()) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await getDashboard(nextFilters);
-      setDashboard(data);
-    } catch {
-      setDashboard(null);
-      setError("No se pudo obtener el dashboard.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { dashboard, loading, error, loadDashboard } = useDashboard();
 
   useEffect(() => {
     if (userLoading) return;

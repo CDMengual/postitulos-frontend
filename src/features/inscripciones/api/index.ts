@@ -1,0 +1,9 @@
+export { applyMassInscripcionInstitutoAssignment } from "./applyMassInscripcionInstitutoAssignment";
+export { getInscripcion } from "./getInscripcion";
+export { getSignedInscripcionDocumentoUrl } from "./getSignedInscripcionDocumentoUrl";
+export { listInscripcionInstitutos } from "./listInscripcionInstitutos";
+export { listInscripciones } from "./listInscripciones";
+export { updateInscripcionDocumentacion } from "./updateInscripcionDocumentacion";
+export { updateInscripcionEstado } from "./updateInscripcionEstado";
+export { updateInscripcionInstituto } from "./updateInscripcionInstituto";
+export { updateInscripcionObservaciones } from "./updateInscripcionObservaciones";

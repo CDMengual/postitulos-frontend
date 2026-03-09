@@ -1,4 +1,4 @@
-import { Cursante, EstadoInscripcion } from "@/types/cursante";
+import { Cursante, EstadoInscripcion } from "@/features/cursantes/model/types";
 
 const ESTADOS_INSCRIPCION: EstadoInscripcion[] = [
   "INSCRIPTO",

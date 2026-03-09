@@ -1,0 +1,17 @@
+export { addAulaCursante } from "./addAulaCursante";
+export { createAula } from "./createAula";
+export { createAulasMassive } from "./createAulasMassive";
+export { deleteAula } from "./deleteAula";
+export { deleteAulaCursante } from "./deleteAulaCursante";
+export { getAula } from "./getAula";
+export { getAulaCursanteDetail } from "./getAulaCursanteDetail";
+export { getAulaFormDependencies } from "./getAulaFormDependencies";
+export { getSignedAulaCursanteDocumentoUrl } from "./getSignedAulaCursanteDocumentoUrl";
+export { importAulaCursantes } from "./importAulaCursantes";
+export { listAulas } from "./listAulas";
+export type { ListAulasFilters } from "./listAulas";
+export { listPostitulos } from "./listPostitulos";
+export { searchCursantes } from "./searchCursantes";
+export { updateAulaCursanteDocumentacion } from "./updateAulaCursanteDocumentacion";
+export { updateAulaCursanteEstado } from "./updateAulaCursanteEstado";
+export { updateAulaCursanteObservaciones } from "./updateAulaCursanteObservaciones";

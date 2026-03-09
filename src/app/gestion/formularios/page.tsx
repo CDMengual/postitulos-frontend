@@ -5,9 +5,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BackButton from "@/shared/components/ui/BackButton";
 import ConfirmDialog from "@/shared/components/ui/ConfirmDeleteDialog";
-import FormulariosCard from "@/features/formularios/components/gestion/FormulariosCard";
-import { useFormularios } from "@/features/formularios/hooks/useFormularios";
-import { Formulario } from "@/features/formularios/model/types";
+import { Formulario, FormulariosCard, useFormularios } from "@/features/formularios";
 import { appToast } from "@/shared/lib/toast";
 
 export default function FormulariosPage() {

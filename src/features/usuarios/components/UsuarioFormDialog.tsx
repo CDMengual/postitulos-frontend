@@ -14,11 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { appToast } from "@/shared/lib/toast";
 import { createUsuario, listInstitutos, updateUsuario } from "@/features/usuarios/api";
-import {
-  User,
-  UsuarioFormData,
-  UsuarioFormInstitutoOption,
-} from "@/features/usuarios/model/types";
+import { User, UsuarioFormData, UsuarioFormInstitutoOption } from "@/features/usuarios/model/types";
 
 interface Props {
   open: boolean;
@@ -108,10 +104,10 @@ export default function UsuarioFormDialog({ open, onClose, onSaved, user }: Prop
 
       if (user) {
         await updateUsuario(user.id, form);
-        appToast.success("Usuario actualizado con Ã©xito");
+        appToast.success("Usuario actualizado con éxito");
       } else {
         await createUsuario(form);
-        appToast.success("Usuario creado con Ã©xito");
+        appToast.success("Usuario creado con éxito");
       }
 
       onSaved();
@@ -147,7 +143,7 @@ export default function UsuarioFormDialog({ open, onClose, onSaved, user }: Prop
           </TextField>
           {!user ? (
             <TextField
-              label="ContraseÃ±a"
+              label="Contraseña"
               name="password"
               type="password"
               value={form.password}

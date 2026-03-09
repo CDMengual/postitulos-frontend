@@ -1,80 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import CursantesTable from "./components/CursantesTable";
 import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
-import api from "@/shared/api/client";
-import { Cursante } from "@/types/cursante";
-import CursanteFormDialog from "./components/CursanteFormDialog";
 import { appToast } from "@/shared/lib/toast";
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: {
-    cursantes: Cursante[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
+import {
+  Cursante,
+  CursanteFormDialog,
+  CursantesTable,
+  useCursantes,
+} from "@/features/cursantes";
 
 export default function CursantesPage() {
-  const [cursantes, setCursantes] = useState<Cursante[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const { cursantes, total, page, pageSize, search, loading, setSearch, refresh, removeCursante } =
+    useCursantes();
   const [selected, setSelected] = useState<Cursante | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setDebouncedSearch(search.trim());
-    }, 350);
-
-    return () => window.clearTimeout(timeout);
-  }, [search]);
-
-  const getCursantes = useCallback(async (pageParam = 1, limitParam = 10, searchParam = "") => {
-    setLoading(true);
-    try {
-      const params: Record<string, string | number> = {
-        page: pageParam,
-        limit: limitParam,
-      };
-
-      if (searchParam) {
-        params.search = searchParam;
-      }
-
-      const response = await api.get<ApiResponse>("/cursantes", { params });
-      const { cursantes, total } = response.data.data;
-      setCursantes(cursantes);
-      setTotal(total);
-      setPage(pageParam);
-      setPageSize(limitParam);
-    } catch (err) {
-      console.error("Error getting cursantes:", err);
-      appToast.error();
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    getCursantes(1, pageSize, debouncedSearch);
-  }, [debouncedSearch, getCursantes, pageSize]);
-
-  const handlePageChange = (newPage: number, newPageSize: number) => {
-    getCursantes(newPage, newPageSize, debouncedSearch);
-  };
 
   const handleCreate = () => {
     setSelected(null);
@@ -95,9 +38,8 @@ export default function CursantesPage() {
     if (!selected) return;
 
     try {
-      await api.delete(`/cursantes/${selected.id}`);
+      await removeCursante(selected.id);
       appToast.success("Cursante eliminado correctamente");
-      await getCursantes(page, pageSize, debouncedSearch);
     } catch {
       appToast.error();
     } finally {
@@ -108,7 +50,7 @@ export default function CursantesPage() {
 
   const handleFormSaved = async () => {
     setOpenForm(false);
-    await getCursantes(page, pageSize, debouncedSearch);
+    await refresh();
   };
 
   return (
@@ -146,7 +88,7 @@ export default function CursantesPage() {
         page={page}
         pageSize={pageSize}
         loading={loading}
-        onPageChange={handlePageChange}
+        onPageChange={(nextPage, nextPageSize) => void refresh(nextPage, nextPageSize)}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -157,7 +99,7 @@ export default function CursantesPage() {
           setOpenForm(false);
           setSelected(null);
         }}
-        onSaved={handleFormSaved}
+        onSaved={() => void handleFormSaved()}
         cursante={selected}
       />
 

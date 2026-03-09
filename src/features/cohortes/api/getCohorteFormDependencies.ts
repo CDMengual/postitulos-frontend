@@ -1,7 +1,7 @@
 import api from "@/shared/api/client";
 import { Formulario } from "@/features/formularios/model/types";
-import { Postitulo } from "@/types/postitulo";
-import { Instituto } from "@/types/instituto";
+import { Instituto } from "@/features/institutos";
+import { Postitulo } from "@/features/postitulos";
 
 interface DataResponse<T> {
   data: T;

@@ -1,5 +1,5 @@
 import { Formulario } from "@/features/formularios/model/types";
-import { Postitulo } from "@/types/postitulo";
+import { Postitulo } from "@/features/postitulos";
 
 export interface Cohorte {
   id: number;

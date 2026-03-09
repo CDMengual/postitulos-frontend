@@ -1,16 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  Typography,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BackButton from "@/shared/components/ui/BackButton";
 import ConfirmDialog from "@/shared/components/ui/ConfirmDeleteDialog";
 import { appToast } from "@/shared/lib/toast";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
-import CohortesTable from "@/features/cohortes/components/CohortesTable";
-import CohorteFormDialog from "@/features/cohortes/components/CohorteFormDialog";
-import { useCohortes } from "@/features/cohortes/hooks/useCohortes";
-import { Cohorte } from "@/features/cohortes/model/types";
+import { Cohorte, CohorteFormDialog, CohortesTable, useCohortes } from "@/features/cohortes";
 
 const ESTADO_COHORTE_FILTER_OPTIONS = [
   "INSCRIPCION",
@@ -77,7 +83,12 @@ export default function CohortesPage() {
           </Button>
         </Stack>
 
-        <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={3} alignItems={{ xs: "stretch", md: "center" }}>
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          mb={3}
+          alignItems={{ xs: "stretch", md: "center" }}
+        >
           <FormControl size="small" sx={{ minWidth: { xs: "100%", md: 240 } }}>
             <InputLabel id="cohortes-estado-filter-label">Estado</InputLabel>
             <Select
@@ -101,7 +112,7 @@ export default function CohortesPage() {
           </Typography>
         </Stack>
 
-        <CohortesTable data={cohortes} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
+        <CohortesTable data={cohortes} onEdit={handleEdit} onDelete={handleDelete} />
 
         <CohorteFormDialog
           open={openForm}

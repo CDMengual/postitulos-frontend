@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
+import { useParams } from "next/navigation";
 import {
   Box,
   Button,
@@ -18,37 +18,13 @@ import {
 } from "@mui/material";
 import BackButton from "@/shared/components/ui/BackButton";
 import Pill from "@/shared/components/ui/Pill";
-import api from "@/shared/api/client";
-import { CursanteDetalleAula, DocumentacionCursante, EstadoCursante } from "@/types/cursante";
+import { useAulaCursanteDetail } from "@/features/aulas";
+import { DocumentacionCursante, EstadoCursante } from "@/features/cursantes";
 import { getDocumentacionCursanteMeta, getEstadoCursanteMeta } from "@/constants/pillColor";
-import { appToast } from "@/shared/lib/toast";
 import { formatDate } from "@/shared/lib/date";
 
-interface CursanteAulaDetalleApiResponse {
-  success: boolean;
-  message: string;
-  data: CursanteDetalleAula;
-}
-
-interface SignedDocumentoResponse {
-  success: boolean;
-  data: {
-    bucket: string;
-    path: string;
-    signedUrl: string;
-    expiresIn: number;
-  };
-}
-
-interface CursanteAulaPatchApiResponse {
-  success: boolean;
-  message: string;
-  data:
-    | CursanteDetalleAula["inscripcionAula"]
-    | {
-        inscripcionAula: CursanteDetalleAula["inscripcionAula"];
-      };
-}
+const ESTADOS: EstadoCursante[] = ["ACTIVO", "ADEUDA", "BAJA"];
+const DOCUMENTACIONES: DocumentacionCursante[] = ["VERIFICADA", "PENDIENTE", "NO_CORRESPONDE"];
 
 function DataItem({ label, value }: { label: string; value: string | number }) {
   return (
@@ -61,220 +37,43 @@ function DataItem({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-const ESTADOS: EstadoCursante[] = ["ACTIVO", "ADEUDA", "BAJA"];
-const DOCUMENTACIONES: DocumentacionCursante[] = ["VERIFICADA", "PENDIENTE", "NO_CORRESPONDE"];
-
 export default function AulaCursanteDetailPage() {
   const params = useParams<{ id: string; cursanteId: string }>();
-  const searchParams = useSearchParams();
   const aulaId = Number(params.id);
   const cursanteId = Number(params.cursanteId);
-  const aulaNombre = searchParams.get("aulaNombre");
-
-  const [detail, setDetail] = useState<CursanteDetalleAula | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [savingObservaciones, setSavingObservaciones] = useState(false);
-  const [savingEstado, setSavingEstado] = useState(false);
-  const [savingDocumentacion, setSavingDocumentacion] = useState(false);
-  const [openingDniDoc, setOpeningDniDoc] = useState(false);
-  const [openingTituloDoc, setOpeningTituloDoc] = useState(false);
-  const [observacionesDraft, setObservacionesDraft] = useState("");
-
-  const getDetail = async () => {
-    if (Number.isNaN(aulaId) || Number.isNaN(cursanteId)) return;
-
-    try {
-      setLoading(true);
-      const response = await api.get<CursanteAulaDetalleApiResponse>(
-        `/aulas/${aulaId}/cursantes/${cursanteId}`
-      );
-      const nextDetail = response.data.data;
-      setDetail(nextDetail);
-      setObservacionesDraft(nextDetail.inscripcionAula.observaciones ?? "");
-    } catch (error: unknown) {
-      const status =
-        typeof error === "object" && error && "response" in error
-          ? (error as { response?: { status?: number } }).response?.status
-          : undefined;
-
-      if (status === 404) {
-        appToast.error("El cursante no pertenece a esta aula");
-      } else {
-        appToast.error("No se pudo cargar el detalle del cursante");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getDetail();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aulaId, cursanteId]);
+  const {
+    detail,
+    loading,
+    savingObservaciones,
+    savingEstado,
+    savingDocumentacion,
+    openingDniDoc,
+    openingTituloDoc,
+    observacionesDraft,
+    setObservacionesDraft,
+    changeEstado,
+    changeDocumentacion,
+    saveObservaciones,
+    openDocumento,
+    estadoValue,
+    documentacionValue,
+  } = useAulaCursanteDetail(aulaId, cursanteId);
 
   const estadoMeta = useMemo(
-    () => getEstadoCursanteMeta(detail?.inscripcionAula.estado as EstadoCursante | undefined),
-    [detail?.inscripcionAula.estado]
+    () => getEstadoCursanteMeta(estadoValue as EstadoCursante | undefined),
+    [estadoValue]
   );
   const documentacionMeta = useMemo(
-    () =>
-      getDocumentacionCursanteMeta(
-        detail?.inscripcionAula.documentacion as DocumentacionCursante | undefined
-      ),
-    [detail?.inscripcionAula.documentacion]
+    () => getDocumentacionCursanteMeta(documentacionValue as DocumentacionCursante | undefined),
+    [documentacionValue]
   );
 
-  const handleSaveObservaciones = async () => {
-    if (!detail) return;
-
-    const previousObservaciones = detail.inscripcionAula.observaciones ?? "";
-    if (observacionesDraft === previousObservaciones) return;
-
-    setSavingObservaciones(true);
-    try {
-      const response = await api.patch<CursanteAulaPatchApiResponse>(
-        `/aulas/${aulaId}/cursantes/${cursanteId}`,
-        {
-          observaciones: observacionesDraft,
-        }
-      );
-
-      const payload =
-        "inscripcionAula" in response.data.data
-          ? response.data.data.inscripcionAula
-          : response.data.data;
-
-      setDetail((prev) =>
-        prev
-          ? {
-              ...prev,
-              inscripcionAula: {
-                ...prev.inscripcionAula,
-                ...payload,
-              },
-            }
-          : prev
-      );
-      setObservacionesDraft(payload.observaciones ?? "");
-      appToast.success("Observaciones guardadas");
-    } catch (error: unknown) {
-      const status =
-        typeof error === "object" && error && "response" in error
-          ? (error as { response?: { status?: number } }).response?.status
-          : undefined;
-
-      if (status === 400) {
-        appToast.error("No se pudieron guardar las observaciones");
-      } else if (status === 404) {
-        appToast.error("El cursante no pertenece a esta aula");
-      } else {
-        appToast.error("No se pudieron guardar las observaciones");
-      }
-    } finally {
-      setSavingObservaciones(false);
-    }
-  };
-
   const handleEstadoChange = async (event: SelectChangeEvent<EstadoCursante>) => {
-    if (!detail) return;
-
-    const previousEstado = detail.inscripcionAula.estado;
-    const newEstado = event.target.value as EstadoCursante;
-    if (newEstado === previousEstado) return;
-
-    setDetail((prev) =>
-      prev
-        ? {
-            ...prev,
-            inscripcionAula: { ...prev.inscripcionAula, estado: newEstado },
-          }
-        : prev
-    );
-    setSavingEstado(true);
-
-    try {
-      await api.patch(`/aulas/${aulaId}/cursantes/${cursanteId}/estado`, {
-        estado: newEstado,
-      });
-    } catch {
-      setDetail((prev) =>
-        prev
-          ? {
-              ...prev,
-              inscripcionAula: { ...prev.inscripcionAula, estado: previousEstado },
-            }
-          : prev
-      );
-      appToast.error("No se pudo actualizar el estado");
-    } finally {
-      setSavingEstado(false);
-    }
+    await changeEstado(event.target.value as EstadoCursante);
   };
 
   const handleDocumentacionChange = async (event: SelectChangeEvent<DocumentacionCursante>) => {
-    if (!detail) return;
-
-    const previousDocumentacion = detail.inscripcionAula.documentacion;
-    const newDocumentacion = event.target.value as DocumentacionCursante;
-    if (newDocumentacion === previousDocumentacion) return;
-
-    setDetail((prev) =>
-      prev
-        ? {
-            ...prev,
-            inscripcionAula: {
-              ...prev.inscripcionAula,
-              documentacion: newDocumentacion,
-            },
-          }
-        : prev
-    );
-    setSavingDocumentacion(true);
-
-    try {
-      await api.patch(`/aulas/${aulaId}/cursantes/${cursanteId}/documentacion`, {
-        documentacion: newDocumentacion,
-      });
-    } catch {
-      setDetail((prev) =>
-        prev
-          ? {
-              ...prev,
-              inscripcionAula: {
-                ...prev.inscripcionAula,
-                documentacion: previousDocumentacion,
-              },
-            }
-          : prev
-      );
-      appToast.error("No se pudo actualizar la documentacion");
-    } finally {
-      setSavingDocumentacion(false);
-    }
-  };
-
-  const openSignedDocumento = async (
-    tipo: "dni" | "titulo",
-    setLoadingState: (value: boolean) => void
-  ) => {
-    setLoadingState(true);
-    try {
-      const response = await api.get<SignedDocumentoResponse>(
-        `/aulas/${aulaId}/cursantes/${cursanteId}/documentos/${tipo}/url`,
-        { params: { expiresIn: 600 } }
-      );
-      const signedUrl = response.data.data?.signedUrl;
-      if (!signedUrl) {
-        appToast.error("No se pudo obtener la URL del documento");
-        return;
-      }
-
-      window.open(signedUrl, "_blank", "noopener,noreferrer");
-    } catch {
-      appToast.error("No se pudo abrir el documento");
-    } finally {
-      setLoadingState(false);
-    }
+    await changeDocumentacion(event.target.value as DocumentacionCursante);
   };
 
   if (loading && !detail) {
@@ -360,10 +159,7 @@ export default function AulaCursanteDetailPage() {
               <DataItem label="Email" value={cursante.email ?? "-"} />
               <DataItem label="Celular" value={cursante.celular ?? "-"} />
               <DataItem label="Titulo" value={cursante.titulo ?? "-"} />
-              <DataItem
-                label="Región"
-                value={cursante.distrito?.regionId ?? cursante.regionId ?? "-"}
-              />
+              <DataItem label="Region" value={cursante.distrito?.regionId ?? cursante.regionId ?? "-"} />
               <DataItem label="Distrito" value={cursante.distrito?.nombre ?? "-"} />
             </Stack>
           </Paper>
@@ -406,7 +202,7 @@ export default function AulaCursanteDetailPage() {
                 <Button
                   variant="contained"
                   size="small"
-                  onClick={handleSaveObservaciones}
+                  onClick={() => void saveObservaciones()}
                   disabled={
                     savingObservaciones ||
                     observacionesDraft === (inscripcionAula.observaciones ?? "")
@@ -422,7 +218,7 @@ export default function AulaCursanteDetailPage() {
                     variant="outlined"
                     size="small"
                     disabled={openingDniDoc}
-                    onClick={() => openSignedDocumento("dni", setOpeningDniDoc)}
+                    onClick={() => void openDocumento("dni")}
                   >
                     Ver DNI adjunto
                   </Button>
@@ -433,7 +229,7 @@ export default function AulaCursanteDetailPage() {
                     variant="outlined"
                     size="small"
                     disabled={openingTituloDoc}
-                    onClick={() => openSignedDocumento("titulo", setOpeningTituloDoc)}
+                    onClick={() => void openDocumento("titulo")}
                   >
                     Ver titulo adjunto
                   </Button>

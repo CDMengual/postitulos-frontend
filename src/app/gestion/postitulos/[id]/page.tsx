@@ -1,41 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
+  CircularProgress,
   Divider,
   Stack,
   Typography,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import api from "@/shared/api/client";
-import BackButton from "@/shared/components/ui/BackButton";
-import { Postitulo } from "@/types/postitulo";
 import { getPostituloTypeMeta } from "@/constants/pillColor";
 import { getPostituloColor } from "@/constants/postitulosColors";
+import { usePostituloDetail } from "@/features/postitulos";
+import BackButton from "@/shared/components/ui/BackButton";
 import Pill from "@/shared/components/ui/Pill";
 
 export default function PostituloDetailPage() {
-  const { id } = useParams();
-  const [postitulo, setPostitulo] = useState<Postitulo | null>(null);
+  const params = useParams();
+  const id = typeof params.id === "string" ? params.id : undefined;
+  const { postitulo, loading } = usePostituloDetail(id);
 
-  const getPostitulo = async () => {
-    try {
-      const res = await api.get(`/postitulos/${id}`);
-      setPostitulo(res.data.data);
-    } catch (err) {
-      console.error("Error al obtener postitulo:", err);
-    }
-  };
-
-  useEffect(() => {
-    getPostitulo();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  if (loading && !postitulo) {
+    return (
+      <Stack minHeight="50vh" alignItems="center" justifyContent="center">
+        <CircularProgress />
+      </Stack>
+    );
+  }
 
   if (!postitulo) return null;
 
@@ -47,13 +41,7 @@ export default function PostituloDetailPage() {
     <>
       <BackButton />
       <Box px={3} py={2}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          mb={4}
-          spacing={10}
-        >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={4} spacing={10}>
           <Stack direction="row" alignItems="center">
             <Typography variant="h5" fontWeight={600}>
               {postitulo.nombre}
@@ -80,11 +68,7 @@ export default function PostituloDetailPage() {
               >
                 <Typography>Informacion general</Typography>
                 {postitulo.codigo && (
-                  <Pill
-                    label={postitulo.codigo}
-                    color={getPostituloColor(postitulo.codigo)}
-                    variant="outlined"
-                  />
+                  <Pill label={postitulo.codigo} color={getPostituloColor(postitulo.codigo)} variant="outlined" />
                 )}
               </Box>
             </AccordionSummary>
@@ -182,13 +166,13 @@ export default function PostituloDetailPage() {
         <Stack mb={4}>
           <Accordion className="customAccordion">
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography>Descripción y destinatarios</Typography>
+              <Typography>Descripcion y destinatarios</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={0} flexWrap="wrap">
                 <Box mb={2}>
                   <Typography variant="body2" color="text.secondary">
-                    Descripción
+                    Descripcion
                   </Typography>
                   <Typography mb={2}>{postitulo.descripcion || "-"}</Typography>
                 </Box>

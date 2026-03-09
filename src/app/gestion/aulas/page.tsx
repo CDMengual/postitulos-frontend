@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -13,21 +13,11 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BackButton from "@/shared/components/ui/BackButton";
-import AulasTable from "./components/AulasTable";
-import AulaFormDialog from "./components/AulaFormDialog";
 import ConfirmDialog from "@/shared/components/ui/ConfirmDeleteDialog";
-import api from "@/shared/api/client";
 import { useUserContext } from "@/shared/components/providers/UserProvider";
-import { Aula } from "@/types/aula";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
-import { Postitulo } from "@/types/postitulo";
-
-interface PostitulosResponse {
-  success: boolean;
-  message: string;
-  data: Postitulo[];
-  meta?: { total?: number };
-}
+import { appToast } from "@/shared/lib/toast";
+import { Aula, AulaFormDialog, AulasTable, useAulas } from "@/features/aulas";
 
 const ESTADO_COHORTE_FILTER_OPTIONS = [
   "INSCRIPCION",
@@ -39,53 +29,15 @@ const ESTADO_COHORTE_FILTER_OPTIONS = [
 
 export default function AulasPage() {
   const { user } = useUserContext();
-  const [aulas, setAulas] = useState<Aula[]>([]);
-  const [postitulos, setPostitulos] = useState<Postitulo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Aula | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [estadoFilter, setEstadoFilter] = useState("ALL");
   const [postituloFilter, setPostituloFilter] = useState("");
-
-  const getAulas = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = {};
-
-      if (estadoFilter) {
-        params.estado = estadoFilter;
-      }
-
-      if (postituloFilter) {
-        params.postituloId = postituloFilter;
-      }
-
-      const response = await api.get("/aulas", { params });
-      setAulas(response.data.data);
-    } catch (err) {
-      console.error("Error getting aulas:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [estadoFilter, postituloFilter]);
-
-  const getPostitulos = async () => {
-    try {
-      const response = await api.get<PostitulosResponse>("/postitulos");
-      setPostitulos(response.data.data);
-    } catch (err) {
-      console.error("Error getting postitulos:", err);
-    }
-  };
-
-  useEffect(() => {
-    getPostitulos();
-  }, []);
-
-  useEffect(() => {
-    getAulas();
-  }, [getAulas]);
+  const { aulas, postitulos, loading, refresh, removeAula } = useAulas({
+    estado: estadoFilter,
+    postituloId: postituloFilter,
+  });
 
   const handleCreate = () => {
     setSelected(null);
@@ -99,19 +51,15 @@ export default function AulasPage() {
 
   const handleConfirmDelete = async () => {
     if (!selected) return;
+
     try {
-      await api.delete(`/aulas/${selected.id}`);
-      getAulas();
-    } catch (err) {
-      console.error("Error deleting aula:", err);
+      await removeAula(selected.id);
+      appToast.success("Aula eliminada");
+    } catch {
+      appToast.error();
     } finally {
       setOpenConfirm(false);
     }
-  };
-
-  const handleFormSuccess = () => {
-    setOpenForm(false);
-    getAulas();
   };
 
   const estadoOptions = useMemo(
@@ -134,21 +82,12 @@ export default function AulasPage() {
     <>
       <BackButton sx={{ mb: 2 }} />
       <Box p={3}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={3}
-        >
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={600}>
             Aulas
           </Typography>
           {user?.rol === "ADMIN" && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreate}
-            >
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
               Crear aula
             </Button>
           )}
@@ -199,18 +138,23 @@ export default function AulasPage() {
           </Typography>
         </Stack>
 
-        <AulasTable data={aulas} loading={loading} onDelete={handleDelete} />
+        <AulasTable data={aulas} onDelete={handleDelete} />
+
         <AulaFormDialog
           open={openForm}
           onClose={() => setOpenForm(false)}
-          onSaved={handleFormSuccess}
+          onSaved={() => {
+            setOpenForm(false);
+            void refresh();
+          }}
         />
+
         <ConfirmDialog
           open={openConfirm}
           onClose={() => setOpenConfirm(false)}
           onConfirm={handleConfirmDelete}
-          title="Confirmar eliminación"
-          message="¿Estás seguro de que querés eliminar el aula"
+          title="Confirmar eliminacion"
+          message="Estas seguro de que queres eliminar el aula"
           highlightText={selected?.nombre}
           confirmLabel="Eliminar"
           confirmColor="error"

@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   Box,
   Button,
@@ -14,56 +19,23 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import api from "@/shared/api/client";
-import { Postitulo } from "@/types/postitulo";
 import { getPostituloTypeMeta } from "@/constants/pillColor";
-import Pill from "@/shared/components/ui/Pill";
-import PostituloFormDialog from "./components/PostituloFormDialog";
-import { appToast } from "@/shared/lib/toast";
+import { Postitulo, PostituloFormDialog, usePostitulos } from "@/features/postitulos";
 import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: Postitulo[];
-  meta: { total: number };
-}
+import Pill from "@/shared/components/ui/Pill";
+import { appToast } from "@/shared/lib/toast";
 
 export default function PostitulosPage() {
   const router = useRouter();
-  const [postitulos, setPostitulos] = useState<Postitulo[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuPostitulo, setMenuPostitulo] = useState<Postitulo | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
-  const [selectedPostitulo, setSelectedPostitulo] = useState<Postitulo | null>(
-    null
-  );
+  const [selectedPostitulo, setSelectedPostitulo] = useState<Postitulo | null>(null);
+  const { postitulos, refresh, removePostitulo } = usePostitulos();
   const openMenu = Boolean(anchorEl);
 
-  const getPostitulos = async () => {
-    try {
-      const res = await api.get<ApiResponse>("/postitulos");
-      setPostitulos(res.data.data);
-    } catch {
-       appToast.error()
-    } finally {
-    }
-  };
-
-  useEffect(() => {
-    getPostitulos();
-  }, []);
-
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    postitulo: Postitulo
-  ) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, postitulo: Postitulo) => {
     setAnchorEl(event.currentTarget);
     setMenuPostitulo(postitulo);
   };
@@ -74,7 +46,9 @@ export default function PostitulosPage() {
   };
 
   const handleView = () => {
-    if (menuPostitulo) router.push(`/gestion/postitulos/${menuPostitulo.id}`);
+    if (menuPostitulo) {
+      router.push(`/gestion/postitulos/${menuPostitulo.id}`);
+    }
     handleMenuClose();
   };
 
@@ -88,9 +62,8 @@ export default function PostitulosPage() {
     if (!selectedPostitulo) return;
 
     try {
-      await api.delete(`/postitulos/${selectedPostitulo.id}`);
-      appToast.success("Postítulo eliminado correctamente");
-      getPostitulos();
+      await removePostitulo(selectedPostitulo.id);
+      appToast.success("Postitulo eliminado correctamente");
     } catch {
       appToast.error();
     } finally {
@@ -101,14 +74,9 @@ export default function PostitulosPage() {
 
   return (
     <Box p={3}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" fontWeight={600}>
-          Postítulos
+          Postitulos
         </Typography>
         <Button
           variant="contained"
@@ -118,45 +86,37 @@ export default function PostitulosPage() {
             setOpenForm(true);
           }}
         >
-          Nuevo Postítulo
+          Nuevo postitulo
         </Button>
       </Stack>
 
       <Stack spacing={3}>
-        {postitulos.map((p) => (
-          <Card key={p.id} variant="hoverable">
+        {postitulos.map((postitulo) => (
+          <Card key={postitulo.id} variant="hoverable">
             <CardHeader
               title={
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="start"
-                >
-                  <Typography className="cardTitle">{p.nombre}</Typography>
+                <Stack direction="row" justifyContent="space-between" alignItems="start">
+                  <Typography className="cardTitle">{postitulo.nombre}</Typography>
 
                   <Stack direction="row" spacing={1} flexWrap="wrap">
-                    {p.tipos?.length > 0 ? (
-                      p.tipos.map((t) => (
+                    {postitulo.tipos?.length > 0 ? (
+                      postitulo.tipos.map((tipo) => (
                         <Pill
-                          key={t.id}
-                          label={getPostituloTypeMeta(t.tipo).label}
-                          color={getPostituloTypeMeta(t.tipo).color}
+                          key={tipo.id}
+                          label={getPostituloTypeMeta(tipo.tipo).label}
+                          color={getPostituloTypeMeta(tipo.tipo).color}
                           variant="outlined"
                         />
                       ))
                     ) : (
-                      <Pill
-                        label="Sin tipo"
-                        color="default"
-                        variant="outlined"
-                      />
+                      <Pill label="Sin tipo" color="default" variant="outlined" />
                     )}
                   </Stack>
                 </Stack>
               }
-              subheader={p.resolucion || "Sin resolución"}
+              subheader={postitulo.resolucion || "Sin resolucion"}
               action={
-                <IconButton onClick={(e) => handleMenuOpen(e, p)}>
+                <IconButton onClick={(event) => handleMenuOpen(event, postitulo)}>
                   <MoreVertIcon />
                 </IconButton>
               }
@@ -164,19 +124,14 @@ export default function PostitulosPage() {
 
             <CardContent>
               <Typography>
-                <strong>Coordinadores:</strong> {p.coordinadores || "-"}
+                <strong>Coordinadores:</strong> {postitulo.coordinadores || "-"}
               </Typography>
             </CardContent>
           </Card>
         ))}
       </Stack>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={openMenu}
-        onClose={handleMenuClose}
-        PaperProps={{ sx: { width: 180 } }}
-      >
+      <Menu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose} PaperProps={{ sx: { width: 180 } }}>
         <MenuItem onClick={handleView}>
           <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
           Ver detalle
@@ -209,8 +164,8 @@ export default function PostitulosPage() {
           setSelectedPostitulo(null);
         }}
         onConfirm={handleConfirmDelete}
-        title="Confirmar eliminación"
-        message="¿Estás seguro de que querés eliminar el postítulo"
+        title="Confirmar eliminacion"
+        message="Estas seguro de que queres eliminar el postitulo"
         highlightText={selectedPostitulo?.nombre}
         confirmLabel="Eliminar"
         confirmColor="error"
@@ -219,7 +174,10 @@ export default function PostitulosPage() {
       <PostituloFormDialog
         open={openForm}
         onClose={() => setOpenForm(false)}
-        onSaved={getPostitulos}
+        onSaved={() => {
+          setOpenForm(false);
+          void refresh();
+        }}
         postitulo={selectedPostitulo}
       />
     </Box>

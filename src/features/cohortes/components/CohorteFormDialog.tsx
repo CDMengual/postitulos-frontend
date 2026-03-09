@@ -18,10 +18,10 @@ import {
   saveCohorte,
   type CohorteFormData,
 } from "@/features/cohortes/api";
-import { Postitulo } from "@/types/postitulo";
+import { Instituto } from "@/features/institutos";
+import { Postitulo } from "@/features/postitulos";
 import { Cohorte } from "@/features/cohortes/model/types";
 import { Formulario } from "@/features/formularios/model/types";
-import { Instituto } from "@/types/instituto";
 
 interface Props {
   open: boolean;

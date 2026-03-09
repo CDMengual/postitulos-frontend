@@ -17,8 +17,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import BackButton from "@/shared/components/ui/BackButton";
 import Pill from "@/shared/components/ui/Pill";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
-import CohorteSnapshotsSection from "@/features/cohortes/components/CohorteSnapshotsSection";
-import { useCohorteDetail } from "@/features/cohortes/hooks/useCohorteDetail";
+import { CohorteSnapshotsSection, useCohorteDetail } from "@/features/cohortes";
 
 const formatDate = (value?: string) => {
   if (!value) return "-";

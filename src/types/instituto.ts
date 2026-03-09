@@ -1,6 +1,1 @@
-export interface Instituto {
-  id: number;
-  nombre: string;
-  distritoNombre: string | null;
-  regionId: number | null;
-}
+export type { Distrito, EditableInstituto, Instituto } from "@/features/institutos/model/types";

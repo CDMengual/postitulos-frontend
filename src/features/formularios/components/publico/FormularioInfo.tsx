@@ -32,7 +32,6 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
   return (
     <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 2, mb: 4 }}>
       <Stack spacing={4}>
-        {/* Header con saludo */}
         <Box>
           <Typography variant="h5" fontWeight={700} color="primary.main" gutterBottom>
             Preinscripción
@@ -45,7 +44,6 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
 
         <Divider />
 
-        {/* Información del postítulo */}
         <Box>
           <Stack direction="row" alignItems="center" spacing={1.5} mb={2.5}>
             <SchoolIcon sx={{ fontSize: 28, color: "primary.main" }} />
@@ -109,7 +107,6 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
           </Stack>
         </Box>
 
-        {/* Período de inscripción */}
         {periodo && (
           <Paper
             elevation={0}
@@ -214,7 +211,6 @@ export default function FormularioInfo({ formulario, cohorte }: Props) {
           </Box>
         )}
 
-        {/* Nota importante */}
         <Paper
           elevation={0}
           sx={{

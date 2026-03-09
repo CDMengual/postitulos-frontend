@@ -5,10 +5,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
 import { appToast } from "@/shared/lib/toast";
-import UsuarioFormDialog from "@/features/usuarios/components/UsuarioFormDialog";
-import UsuariosTable from "@/features/usuarios/components/UsuariosTable";
-import { useUsuarios } from "@/features/usuarios/hooks/useUsuarios";
-import { User } from "@/features/usuarios/model/types";
+import { User, UsuarioFormDialog, UsuariosTable, useUsuarios } from "@/features/usuarios";
 
 export default function UsuariosPage() {
   const { usuarios, loading, refresh, removeUsuario } = useUsuarios();
@@ -36,7 +33,7 @@ export default function UsuariosPage() {
 
     try {
       await removeUsuario(selected.id);
-      appToast.success("Usuario eliminado con Ã©xito");
+      appToast.success("Usuario eliminado con éxito");
     } catch {
       appToast.error();
     } finally {
@@ -55,12 +52,7 @@ export default function UsuariosPage() {
         </Button>
       </Stack>
 
-      <UsuariosTable
-        data={usuarios}
-        loading={loading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <UsuariosTable data={usuarios} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
       <UsuarioFormDialog
         open={openForm}
         onClose={() => setOpenForm(false)}
@@ -71,8 +63,8 @@ export default function UsuariosPage() {
         open={openConfirm}
         onClose={() => setOpenConfirm(false)}
         onConfirm={handleConfirmDelete}
-        title="Confirmar eliminaciÃ³n"
-        message="Â¿EstÃ¡s seguro de que querÃ©s eliminar al usuario"
+        title="Confirmar eliminación"
+        message="¿Estás seguro de que querés eliminar al usuario"
         highlightText={`${selected?.nombre ?? ""} ${selected?.apellido ?? ""}`}
         confirmLabel="Eliminar"
         confirmColor="error"

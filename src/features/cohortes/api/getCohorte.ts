@@ -1,6 +1,6 @@
 import api from "@/shared/api/client";
 import { Cohorte } from "@/features/cohortes/model/types";
-import { Instituto } from "@/types/instituto";
+import { Instituto } from "@/features/institutos";
 
 interface GetCohorteResponse {
   success: boolean;
