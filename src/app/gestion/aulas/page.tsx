@@ -12,12 +12,12 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import BackButton from "@/components/ui/BackButton";
+import BackButton from "@/shared/components/ui/BackButton";
 import AulasTable from "./components/AulasTable";
 import AulaFormDialog from "./components/AulaFormDialog";
-import ConfirmDialog from "@/components/ui/ConfirmDeleteDialog";
-import api from "@/services/api";
-import { useUserContext } from "@/components/providers/UserProvider";
+import ConfirmDialog from "@/shared/components/ui/ConfirmDeleteDialog";
+import api from "@/shared/api/client";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
 import { Aula } from "@/types/aula";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
 import { Postitulo } from "@/types/postitulo";

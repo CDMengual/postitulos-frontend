@@ -1,4 +1,4 @@
-import { UserRole } from "./user";
+import { UserRole } from "@/features/usuarios/model/types";
 
 export type DashboardScope = "global" | "user";
 

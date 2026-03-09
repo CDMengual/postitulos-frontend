@@ -1,13 +1,16 @@
 "use client";
 
 import { Box, CircularProgress, Stack } from "@mui/material";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
-import LoadingOverlay from "@/components/ui/LoadingOverlay";
-import RouteLoadingListener from "@/components/providers/RouteLoadingListener";
-import { useLoading, LoadingProvider } from "@/components/providers/LoadingProvider";
-import UserProvider, { useUserContext } from "@/components/providers/UserProvider";
-import { SidebarProvider } from "@/components/providers/SidebarProvider";
+import Navbar from "@/shared/components/layout/Navbar";
+import Sidebar from "@/shared/components/layout/Sidebar";
+import LoadingOverlay from "@/shared/components/ui/LoadingOverlay";
+import RouteLoadingListener from "@/shared/components/providers/RouteLoadingListener";
+import {
+  useLoading,
+  LoadingProvider,
+} from "@/shared/components/providers/LoadingProvider";
+import UserProvider, { useUserContext } from "@/shared/components/providers/UserProvider";
+import { SidebarProvider } from "@/shared/components/providers/SidebarProvider";
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { loading: userLoading } = useUserContext();

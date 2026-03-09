@@ -12,13 +12,13 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import api from "@/services/api";
-import BackButton from "@/components/ui/BackButton";
+import api from "@/shared/api/client";
+import BackButton from "@/shared/components/ui/BackButton";
 import { Aula } from "@/types/aula";
-import ConfirmDialog from "@/components/ui/ConfirmDeleteDialog";
+import ConfirmDialog from "@/shared/components/ui/ConfirmDeleteDialog";
 import CursantesTable from "./components/CursantesTable";
 import CursanteAddDialog from "./components/CursanteAddDialog";
-import Pill from "@/components/ui/Pill";
+import Pill from "@/shared/components/ui/Pill";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
 
 interface ApiResponse {

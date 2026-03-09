@@ -1,47 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import UsuariosTable from "./components/UsuariosTable";
-import UsuariosFormDialog from "./components/UsuarioFormDialog";
-import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
-import api from "@/services/api";
-import { User } from "@/types/user";
-import { appToast } from "@/utils/toast";
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: User[];
-  meta: {
-    total: number;
-  };
-}
+import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
+import { appToast } from "@/shared/lib/toast";
+import UsuarioFormDialog from "@/features/usuarios/components/UsuarioFormDialog";
+import UsuariosTable from "@/features/usuarios/components/UsuariosTable";
+import { useUsuarios } from "@/features/usuarios/hooks/useUsuarios";
+import { User } from "@/features/usuarios/model/types";
 
 export default function UsuariosPage() {
-  const [usuarios, setUsuarios] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { usuarios, loading, refresh, removeUsuario } = useUsuarios();
   const [selected, setSelected] = useState<User | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
-
-  const getUsers = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get<ApiResponse>("/users");
-      const users = response.data.data;
-      setUsuarios(users);
-    } catch {
-      appToast.error();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getUsers();
-  }, []);
 
   const handleCreate = () => {
     setSelected(null);
@@ -60,20 +33,15 @@ export default function UsuariosPage() {
 
   const handleConfirmDelete = async () => {
     if (!selected) return;
+
     try {
-      await api.delete(`/users/${selected.id}`);
-      appToast.success("Usuario eliminado con éxito");
-      getUsers();
+      await removeUsuario(selected.id);
+      appToast.success("Usuario eliminado con Ã©xito");
     } catch {
       appToast.error();
     } finally {
       setOpenConfirm(false);
     }
-  };
-
-  const handleFormSuccess = () => {
-    setOpenForm(false);
-    getUsers();
   };
 
   return (
@@ -93,18 +61,18 @@ export default function UsuariosPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
-      <UsuariosFormDialog
+      <UsuarioFormDialog
         open={openForm}
         onClose={() => setOpenForm(false)}
         user={selected}
-        onSaved={getUsers}
+        onSaved={refresh}
       />
       <ConfirmDeleteDialog
         open={openConfirm}
         onClose={() => setOpenConfirm(false)}
         onConfirm={handleConfirmDelete}
-        title="Confirmar eliminación"
-        message="¿Estás seguro de que querés eliminar al usuario"
+        title="Confirmar eliminaciÃ³n"
+        message="Â¿EstÃ¡s seguro de que querÃ©s eliminar al usuario"
         highlightText={`${selected?.nombre ?? ""} ${selected?.apellido ?? ""}`}
         confirmLabel="Eliminar"
         confirmColor="error"

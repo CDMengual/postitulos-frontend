@@ -11,9 +11,9 @@ import {
   Stack,
   CircularProgress,
 } from "@mui/material";
-import api from "@/services/api";
+import api from "@/shared/api/client";
 import { Cursante } from "@/types/cursante";
-import { appToast } from "@/utils/toast";
+import { appToast } from "@/shared/lib/toast";
 
 interface Props {
   open: boolean;

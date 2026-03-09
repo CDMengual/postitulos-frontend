@@ -12,10 +12,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import api from "@/services/api";
+import api from "@/shared/api/client";
 import { Instituto } from "@/types/instituto";
-import { appToast } from "@/utils/toast";
-import { withCache } from "@/utils/cache";
+import { appToast } from "@/shared/lib/toast";
+import { withCache } from "@/shared/lib/cache";
 
 interface InstitutoFormValues {
   nombre: string;

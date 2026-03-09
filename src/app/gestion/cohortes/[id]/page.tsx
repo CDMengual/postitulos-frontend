@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Accordion,
@@ -14,26 +14,11 @@ import {
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import BackButton from "@/components/ui/BackButton";
-import Pill from "@/components/ui/Pill";
-import CohorteSnapshotsSection from "@/components/cohortes/CohorteSnapshotsSection";
-import api from "@/services/api";
-import { Cohorte } from "@/types/cohorte";
+import BackButton from "@/shared/components/ui/BackButton";
+import Pill from "@/shared/components/ui/Pill";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
-import { appToast } from "@/utils/toast";
-import { Instituto } from "@/types/instituto";
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: Cohorte;
-}
-
-interface InstitutosResponse {
-  success: boolean;
-  message: string;
-  data: Instituto[];
-}
+import CohorteSnapshotsSection from "@/features/cohortes/components/CohorteSnapshotsSection";
+import { useCohorteDetail } from "@/features/cohortes/hooks/useCohorteDetail";
 
 const formatDate = (value?: string) => {
   if (!value) return "-";
@@ -43,40 +28,10 @@ const formatDate = (value?: string) => {
 };
 
 export default function CohorteDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = typeof params.id === "string" ? params.id : undefined;
   const router = useRouter();
-  const [cohorte, setCohorte] = useState<Cohorte | null>(null);
-  const [institutosMeta, setInstitutosMeta] = useState<Record<number, Instituto>>({});
-  const [loading, setLoading] = useState(true);
-
-  const getCohorte = async () => {
-    try {
-      setLoading(true);
-      const [cohorteRes, institutosRes] = await Promise.all([
-        api.get<ApiResponse>(`/cohortes/${id}`),
-        api.get<InstitutosResponse>("/institutos"),
-      ]);
-      setCohorte(cohorteRes.data.data);
-
-      const map = (institutosRes.data.data || []).reduce<Record<number, Instituto>>(
-        (acc, instituto) => {
-          acc[instituto.id] = instituto;
-          return acc;
-        },
-        {}
-      );
-      setInstitutosMeta(map);
-    } catch {
-      appToast.error("No se pudo cargar la cohorte");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getCohorte();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  const { cohorte, institutosMeta, loading } = useCohorteDetail(id);
 
   const institutosRows = useMemo(
     () =>
@@ -103,23 +58,9 @@ export default function CohorteDetailPage() {
   );
 
   const institutosColumns: GridColDef[] = [
-    {
-      field: "region",
-      headerName: "Region",
-      width: 110,
-    },
-    {
-      field: "distrito",
-      headerName: "Distrito",
-      flex: 1,
-      minWidth: 200,
-    },
-    {
-      field: "nombre",
-      headerName: "Instituto",
-      flex: 1.5,
-      minWidth: 260,
-    },
+    { field: "region", headerName: "Region", width: 110 },
+    { field: "distrito", headerName: "Distrito", flex: 1, minWidth: 200 },
+    { field: "nombre", headerName: "Instituto", flex: 1.5, minWidth: 260 },
   ];
 
   if (loading && !cohorte) {
@@ -150,11 +91,7 @@ export default function CohorteDetailPage() {
           </Typography>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Pill label={estadoMeta.label} color={estadoMeta.color} variant="filled" />
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => router.push(`/gestion/inscripciones?cohorteId=${cohorte.id}`)}
-            >
+            <Button variant="outlined" size="small" onClick={() => router.push(`/gestion/inscripciones?cohorteId=${cohorte.id}`)}>
               Ver inscripciones
             </Button>
           </Stack>
@@ -263,17 +200,13 @@ export default function CohorteDetailPage() {
                   <Typography variant="body2" color="text.secondary">
                     Inicio inscripcion
                   </Typography>
-                  <Typography fontWeight={500}>
-                    {formatDate(cohorte.fechaInicioInscripcion)}
-                  </Typography>
+                  <Typography fontWeight={500}>{formatDate(cohorte.fechaInicioInscripcion)}</Typography>
                 </Box>
                 <Box flex={1}>
                   <Typography variant="body2" color="text.secondary">
                     Fin inscripcion
                   </Typography>
-                  <Typography fontWeight={500}>
-                    {formatDate(cohorte.fechaFinInscripcion)}
-                  </Typography>
+                  <Typography fontWeight={500}>{formatDate(cohorte.fechaFinInscripcion)}</Typography>
                 </Box>
               </Stack>
             </AccordionDetails>

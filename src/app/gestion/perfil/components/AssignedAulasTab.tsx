@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Box } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Aula } from "@/types/aula";
-import Pill from "@/components/ui/Pill";
+import Pill from "@/shared/components/ui/Pill";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
 
 interface Props {

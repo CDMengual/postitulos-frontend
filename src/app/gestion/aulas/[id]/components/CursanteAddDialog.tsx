@@ -17,9 +17,9 @@ import {
 } from "@mui/material";
 import { useEffect, useState, SyntheticEvent, ChangeEvent } from "react";
 import { AxiosError } from "axios";
-import api from "@/services/api";
+import api from "@/shared/api/client";
 import { Cursante } from "@/types/cursante";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 interface Props {
   open: boolean;

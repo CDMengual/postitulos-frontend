@@ -10,7 +10,7 @@ import {
   AssignmentTurnedIn,
 } from "@mui/icons-material";
 
-import { UserRole } from "@/types/user";
+import { UserRole } from "@/features/usuarios/model/types";
 
 export const menuItems: Array<{
   label: string;

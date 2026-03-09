@@ -15,9 +15,9 @@ import {
 import { useEffect, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import api from "@/services/api";
+import api from "@/shared/api/client";
 import { Postitulo } from "@/types/postitulo";
-import { appToast } from "@/utils/toast";
+import { appToast } from "@/shared/lib/toast";
 
 interface Props {
   open: boolean;

@@ -16,11 +16,11 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
 } from "@mui/icons-material";
-import { useLoading } from "@/components/providers/LoadingProvider";
+import { useLoading } from "@/shared/components/providers/LoadingProvider";
 import { Aula } from "@/types/aula";
-import { useUserContext } from "@/components/providers/UserProvider";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
-import Pill from "@/components/ui/Pill";
+import Pill from "@/shared/components/ui/Pill";
 
 interface Props {
   data: Aula[];

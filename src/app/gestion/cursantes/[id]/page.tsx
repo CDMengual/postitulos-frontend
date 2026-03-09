@@ -14,19 +14,19 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
-import BackButton from "@/components/ui/BackButton";
-import api from "@/services/api";
+import BackButton from "@/shared/components/ui/BackButton";
+import api from "@/shared/api/client";
 import { Cursante } from "@/types/cursante";
 import { Aula } from "@/types/aula";
-import Pill from "@/components/ui/Pill";
+import Pill from "@/shared/components/ui/Pill";
 import {
   getDocumentacionCursanteMeta,
   getEstadoCohorteMeta,
   getEstadoCursanteMeta,
 } from "@/constants/pillColor";
-import { appToast } from "@/utils/toast";
+import { appToast } from "@/shared/lib/toast";
 import AssignAulaDialog from "./components/AssignAulaDialog";
-import { getEstadoInscripcionCursante } from "@/utils/inscripcionEstado";
+import { getEstadoInscripcionCursante } from "@/shared/lib/inscripcionEstado";
 
 interface CursanteApiResponse {
   success: boolean;

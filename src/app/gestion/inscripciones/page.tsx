@@ -23,9 +23,9 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import api from "@/services/api";
-import { useUserContext } from "@/components/providers/UserProvider";
-import { Cohorte } from "@/types/cohorte";
+import api from "@/shared/api/client";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
+import { Cohorte } from "@/features/cohortes/model/types";
 import {
   getDocumentacionCursanteMeta,
   getEstadoInscripcionPrivadaMeta,
@@ -37,9 +37,9 @@ import {
   InscripcionListadoItem,
   InscripcionesListApiResponse,
 } from "@/types/inscripcion";
-import { useDebounce } from "@/hooks/useDebounce";
-import { appToast } from "@/utils/toast";
-import { updateItemInArray } from "@/utils/localUpdate";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { appToast } from "@/shared/lib/toast";
+import { updateItemInArray } from "@/shared/lib/localUpdate";
 import InscripcionesTable from "./components/InscripcionesTable";
 
 type CohorteOption = Pick<Cohorte, "id" | "nombre" | "anio" | "institutos">;

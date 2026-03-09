@@ -18,12 +18,12 @@ import {
   Typography,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import PillMenu from "@/components/ui/PillMenu";
+import PillMenu from "@/shared/components/ui/PillMenu";
 import {
   getDocumentacionCursanteMeta,
   getEstadoInscripcionPrivadaMeta,
 } from "@/constants/pillColor";
-import { formatDate } from "@/utils/date";
+import { formatDate } from "@/shared/lib/date";
 import {
   DocumentacionInscripcion,
   EstadoInscripcionPrivada,

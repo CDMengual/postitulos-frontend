@@ -2,7 +2,7 @@
 
 import { Button, Card, CardContent, Chip, Divider, Stack, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import { User } from "@/types/user";
+import { User } from "@/features/usuarios/model/types";
 
 interface Props {
   user: User;

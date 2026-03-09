@@ -1,31 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { useMemo, useState } from "react";
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import BackButton from "@/components/ui/BackButton";
-import CohortesTable from "./components/CohortesTable";
-import CohorteFormDialog from "./components/CohorteFormDialog";
-import ConfirmDialog from "@/components/ui/ConfirmDeleteDialog";
-import api from "@/services/api";
-import { Cohorte } from "@/types/cohorte";
+import BackButton from "@/shared/components/ui/BackButton";
+import ConfirmDialog from "@/shared/components/ui/ConfirmDeleteDialog";
+import { appToast } from "@/shared/lib/toast";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
-
-interface ApiResponse {
-  success: boolean;
-  message: string;
-  data: Cohorte[];
-  meta?: { total: number };
-}
+import CohortesTable from "@/features/cohortes/components/CohortesTable";
+import CohorteFormDialog from "@/features/cohortes/components/CohorteFormDialog";
+import { useCohortes } from "@/features/cohortes/hooks/useCohortes";
+import { Cohorte } from "@/features/cohortes/model/types";
 
 const ESTADO_COHORTE_FILTER_OPTIONS = [
   "INSCRIPCION",
@@ -36,34 +21,11 @@ const ESTADO_COHORTE_FILTER_OPTIONS = [
 ] as const;
 
 export default function CohortesPage() {
-  const [cohortes, setCohortes] = useState<Cohorte[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Cohorte | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
   const [estadoFilter, setEstadoFilter] = useState("DEFAULT");
-
-  const getCohortes = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = {};
-
-      if (estadoFilter !== "DEFAULT") {
-        params.estado = estadoFilter;
-      }
-
-      const response = await api.get<ApiResponse>("/cohortes", { params });
-      setCohortes(response.data.data);
-    } catch (err) {
-      console.error("Error getting cohortes:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [estadoFilter]);
-
-  useEffect(() => {
-    getCohortes();
-  }, [getCohortes]);
+  const { cohortes, loading, refresh, removeCohorte } = useCohortes({ estado: estadoFilter });
 
   const handleCreate = () => {
     setSelected(null);
@@ -82,19 +44,16 @@ export default function CohortesPage() {
 
   const handleConfirmDelete = async () => {
     if (!selected) return;
+
     try {
-      await api.delete(`/cohortes/${selected.id}`);
-      getCohortes();
-    } catch (err) {
-      console.error("Error deleting cohorte:", err);
+      await removeCohorte(selected.id);
+      appToast.success("Cohorte eliminada con exito");
+      setSelected(null);
+    } catch {
+      appToast.error("No se pudo eliminar la cohorte");
     } finally {
       setOpenConfirm(false);
     }
-  };
-
-  const handleFormSuccess = () => {
-    setOpenForm(false);
-    getCohortes();
   };
 
   const estadoOptions = useMemo(
@@ -109,30 +68,16 @@ export default function CohortesPage() {
     <>
       <BackButton sx={{ mb: 2 }} />
       <Box p={3}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={3}
-        >
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={600}>
             Cohortes
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleCreate}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
             Crear cohorte
           </Button>
         </Stack>
 
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          mb={3}
-          alignItems={{ xs: "stretch", md: "center" }}
-        >
+        <Stack direction={{ xs: "column", md: "row" }} spacing={2} mb={3} alignItems={{ xs: "stretch", md: "center" }}>
           <FormControl size="small" sx={{ minWidth: { xs: "100%", md: 240 } }}>
             <InputLabel id="cohortes-estado-filter-label">Estado</InputLabel>
             <Select
@@ -156,17 +101,15 @@ export default function CohortesPage() {
           </Typography>
         </Stack>
 
-        <CohortesTable
-          data={cohortes}
-          loading={loading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        <CohortesTable data={cohortes} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
 
         <CohorteFormDialog
           open={openForm}
           onClose={() => setOpenForm(false)}
-          onSaved={handleFormSuccess}
+          onSaved={() => {
+            setOpenForm(false);
+            void refresh();
+          }}
           cohorte={selected}
         />
 
@@ -174,8 +117,8 @@ export default function CohortesPage() {
           open={openConfirm}
           onClose={() => setOpenConfirm(false)}
           onConfirm={handleConfirmDelete}
-          title="Confirmar eliminación"
-          message="¿Estás seguro de que querés eliminar la cohorte"
+          title="Confirmar eliminacion"
+          message="Estas seguro de que queres eliminar la cohorte"
           highlightText={selected?.nombre}
           confirmLabel="Eliminar"
           confirmColor="error"

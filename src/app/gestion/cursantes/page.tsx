@@ -4,11 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CursantesTable from "./components/CursantesTable";
-import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
-import api from "@/services/api";
+import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
+import api from "@/shared/api/client";
 import { Cursante } from "@/types/cursante";
 import CursanteFormDialog from "./components/CursanteFormDialog";
-import { appToast } from "@/utils/toast";
+import { appToast } from "@/shared/lib/toast";
 
 interface ApiResponse {
   success: boolean;

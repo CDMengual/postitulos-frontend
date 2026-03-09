@@ -5,11 +5,11 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import InstitutosTable from "./components/InstitutosTable";
 import InstitutoFormDialog from "./components/InstitutoFormDialog";
-import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
-import api from "@/services/api";
+import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
+import api from "@/shared/api/client";
 import { Instituto } from "@/types/instituto";
-import { withCache } from "@/utils/cache";
-import { appToast } from "@/utils/toast";
+import { withCache } from "@/shared/lib/cache";
+import { appToast } from "@/shared/lib/toast";
 
 interface Distrito {
   id: number;

@@ -19,13 +19,13 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import api from "@/services/api";
+import api from "@/shared/api/client";
 import { Postitulo } from "@/types/postitulo";
 import { getPostituloTypeMeta } from "@/constants/pillColor";
-import Pill from "@/components/ui/Pill";
+import Pill from "@/shared/components/ui/Pill";
 import PostituloFormDialog from "./components/PostituloFormDialog";
-import { appToast } from "@/utils/toast";
-import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
+import { appToast } from "@/shared/lib/toast";
+import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
 
 interface ApiResponse {
   success: boolean;

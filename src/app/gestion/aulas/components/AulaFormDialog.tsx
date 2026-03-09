@@ -20,11 +20,11 @@ import {
 } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useEffect, useState, SyntheticEvent } from "react";
-import api from "@/services/api";
-import { useUserContext } from "@/components/providers/UserProvider";
-import { User } from "@/types/user";
-import { Cohorte } from "@/types/cohorte";
-import { appToast } from "@/utils/toast";
+import api from "@/shared/api/client";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
+import { User } from "@/features/usuarios/model/types";
+import { Cohorte } from "@/features/cohortes/model/types";
+import { appToast } from "@/shared/lib/toast";
 
 type TabValue = "individual" | "masivo";
 

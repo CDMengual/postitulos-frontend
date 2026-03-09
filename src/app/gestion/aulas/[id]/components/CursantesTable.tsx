@@ -17,11 +17,11 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
 } from "@mui/icons-material";
-import api from "@/services/api";
+import api from "@/shared/api/client";
 import { AulaCursanteRow, DocumentacionCursante, EstadoCursante } from "@/types/cursante";
 
-import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
-import PillMenu from "@/components/ui/PillMenu";
+import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
+import PillMenu from "@/shared/components/ui/PillMenu";
 import {
   getDocumentacionCursanteMeta,
   getEstadoCursanteMeta,

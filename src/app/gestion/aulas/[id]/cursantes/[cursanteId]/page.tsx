@@ -16,13 +16,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import BackButton from "@/components/ui/BackButton";
-import Pill from "@/components/ui/Pill";
-import api from "@/services/api";
+import BackButton from "@/shared/components/ui/BackButton";
+import Pill from "@/shared/components/ui/Pill";
+import api from "@/shared/api/client";
 import { CursanteDetalleAula, DocumentacionCursante, EstadoCursante } from "@/types/cursante";
 import { getDocumentacionCursanteMeta, getEstadoCursanteMeta } from "@/constants/pillColor";
-import { appToast } from "@/utils/toast";
-import { formatDate } from "@/utils/date";
+import { appToast } from "@/shared/lib/toast";
+import { formatDate } from "@/shared/lib/date";
 
 interface CursanteAulaDetalleApiResponse {
   success: boolean;

@@ -12,7 +12,7 @@ import {
   Paper,
 } from "@mui/material";
 import { AxiosError } from "axios";
-import api from "@/services/api";
+import api from "@/shared/api/client";
 
 export default function LoginPage() {
   const router = useRouter();

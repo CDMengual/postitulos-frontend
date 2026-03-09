@@ -2,14 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Select, MenuItem, Box, Typography, Paper, Stack, Container, Alert } from "@mui/material";
-import api from "@/services/api";
-import { CohortePublica } from "@/types/cohorte";
-import Formulario from "@/components/formularios/Fromulario";
-import { formatDate } from "@/utils/date";
-
-interface ApiDataResponse<T> {
-  data: T;
-}
+import { CohortePublica } from "@/features/cohortes/model/types";
+import Formulario from "@/features/formularios/components/publico/Formulario";
+import { listCohortesEnInscripcion } from "@/features/formularios/api";
+import { formatDate } from "@/shared/lib/date";
 
 export default function InscripcionPublicaPage() {
   const [cohortes, setCohortes] = useState<CohortePublica[]>([]);
@@ -19,64 +15,52 @@ export default function InscripcionPublicaPage() {
   useEffect(() => {
     const fetchCohortes = async () => {
       try {
-        const res = await api.get<ApiDataResponse<CohortePublica[]>>(
-          "/public/cohortes-en-inscripcion"
-        );
-        setCohortes(res.data.data);
+        const nextCohortes = await listCohortesEnInscripcion();
+        setCohortes(nextCohortes);
       } catch (error) {
         console.error(error);
       }
     };
-    fetchCohortes();
+    void fetchCohortes();
   }, []);
 
   const handleSelect = (id: string) => {
     setSelected(id);
-    const cohorteSeleccionada = cohortes.find((c) => String(c.id) === id) ?? null;
+    const cohorteSeleccionada = cohortes.find((cohorte) => String(cohorte.id) === id) ?? null;
     setDetalle(cohorteSeleccionada);
   };
 
   return (
     <Container maxWidth="md" sx={{ mb: 6 }}>
       <Stack alignItems="center" spacing={2} mt={6} mb={4}>
-        <Box
-          component="img"
-          src="/assets/logos/banner_pba.svg"
-          alt="Logo PBA"
-          sx={{ height: 100 }}
-        />
+        <Box component="img" src="/assets/logos/banner_pba.svg" alt="Logo PBA" sx={{ height: 100 }} />
       </Stack>
 
       <Paper sx={{ p: 4, borderRadius: 3, boxShadow: 2, mb: 4 }}>
         <Typography variant="h5" fontWeight={700} gutterBottom>
-          Inscripción a Postítulos
+          Inscripcion a Postitulos
         </Typography>
 
         <Box mt={3}>
           <Typography variant="body1" mb={1}>
-            Seleccioná el postítulo:
+            Selecciona el postitulo:
           </Typography>
 
-          <Select
-            fullWidth
-            value={selected}
-            displayEmpty
-            onChange={(e) => handleSelect(e.target.value as string)}
-          >
+          <Select fullWidth value={selected} displayEmpty onChange={(e) => handleSelect(e.target.value as string)}>
             <MenuItem value="" disabled>
-              Elegí una cohorte
+              Elige una cohorte
             </MenuItem>
 
-            {cohortes.map((c) => (
-              <MenuItem value={String(c.id)} key={c.id}>
-                {c.postitulo.nombre} - Cohorte {c.anio}
+            {cohortes.map((cohorte) => (
+              <MenuItem value={String(cohorte.id)} key={cohorte.id}>
+                {cohorte.postitulo.nombre} - Cohorte {cohorte.anio}
               </MenuItem>
             ))}
           </Select>
         </Box>
       </Paper>
 
-      {detalle && (
+      {detalle ? (
         <Box mt={4}>
           {(() => {
             const inicio = detalle.fechaInicioInscripcion
@@ -89,15 +73,13 @@ export default function InscripcionPublicaPage() {
                   timeZone: "UTC",
                 })
               : "";
-            const cuposInscripcionDisponibles =
-              detalle.cuposDisponibles + detalle.cuposEsperaDisponibles;
 
             if (detalle.fueraDePeriodoInscripcion || !detalle.enPeriodoInscripcion) {
               return (
                 <Alert severity="info" sx={{ borderRadius: 2, p: 2 }}>
-                  <Typography fontWeight={600}>La inscripción no se encuentra abierta.</Typography>
+                  <Typography fontWeight={600}>La inscripcion no se encuentra abierta.</Typography>
                   <Typography variant="body2" mt={0.5}>
-                    Período habilitado: <strong>{inicio}</strong> al <strong>{fin}</strong>.
+                    Periodo habilitado: <strong>{inicio}</strong> al <strong>{fin}</strong>.
                   </Typography>
                 </Alert>
               );
@@ -110,7 +92,7 @@ export default function InscripcionPublicaPage() {
                     Se agotaron los cupos disponibles para esta cohorte.
                   </Typography>
                   <Typography variant="body2" mt={0.5}>
-                    En caso de abrirse nuevos cupos se estará informando por los canales oficiales.
+                    En caso de abrirse nuevos cupos se estara informando por los canales oficiales.
                   </Typography>
                 </Alert>
               );
@@ -120,7 +102,7 @@ export default function InscripcionPublicaPage() {
               return (
                 <Alert severity="error" sx={{ borderRadius: 2, p: 2 }}>
                   <Typography>
-                    Esta cohorte no tiene un formulario de inscripción configurado.
+                    Esta cohorte no tiene un formulario de inscripcion configurado.
                   </Typography>
                 </Alert>
               );
@@ -129,7 +111,7 @@ export default function InscripcionPublicaPage() {
             return <Formulario cohorte={detalle} />;
           })()}
         </Box>
-      )}
+      ) : null}
     </Container>
   );
 }

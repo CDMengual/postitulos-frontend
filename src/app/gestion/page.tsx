@@ -24,10 +24,10 @@ import {
   sortDashboardPostitulos,
 } from "@/components/dashboard/dashboardSelectors";
 import { DashboardTabValue, getSummaryMetrics } from "@/components/dashboard/dashboardViewConfig";
-import { useUserContext } from "@/components/providers/UserProvider";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
 import { DashboardData } from "@/types/dashboard";
 import { DashboardFilters, getDashboard } from "@/services/dashboardService";
-import { appToast } from "@/utils/toast";
+import { appToast } from "@/shared/lib/toast";
 
 function createAllTimeFilters(): Required<DashboardFilters> {
   return {

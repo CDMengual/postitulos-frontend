@@ -12,14 +12,14 @@ import {
   Tab,
   Tabs,
 } from "@mui/material";
-import api from "@/services/api";
-import { useUserContext } from "@/components/providers/UserProvider";
+import api from "@/shared/api/client";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
 import { Aula } from "@/types/aula";
 import AssignedAulasTab from "./components/AssignedAulasTab";
 import ProfileEditDialog, { ProfileForm } from "./components/ProfileEditDialog";
 import ProfileSummaryCard from "./components/ProfileSummaryCard";
 import SecurityTab, { PasswordForm } from "./components/SecurityTab";
-import { appToast } from "@/utils/toast";
+import { appToast } from "@/shared/lib/toast";
 
 export default function PerfilPage() {
   const router = useRouter();

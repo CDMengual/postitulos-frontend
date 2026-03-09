@@ -12,12 +12,12 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import api from "@/services/api";
-import BackButton from "@/components/ui/BackButton";
+import api from "@/shared/api/client";
+import BackButton from "@/shared/components/ui/BackButton";
 import { Postitulo } from "@/types/postitulo";
 import { getPostituloTypeMeta } from "@/constants/pillColor";
 import { getPostituloColor } from "@/constants/postitulosColors";
-import Pill from "@/components/ui/Pill";
+import Pill from "@/shared/components/ui/Pill";
 
 export default function PostituloDetailPage() {
   const { id } = useParams();
