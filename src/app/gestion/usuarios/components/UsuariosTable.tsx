@@ -66,10 +66,23 @@ export default function UsuarioTable({
   };
 
   const columns: GridColDef[] = [
-    { field: "nombre", headerName: "Nombre", flex: 1, minWidth: 120 },
-    { field: "apellido", headerName: "Apellido", flex: 1, minWidth: 120 },
+    {
+      field: "apellidoNombre",
+      headerName: "Apellido y nombre",
+      flex: 1.2,
+      minWidth: 220,
+      sortable: false,
+      valueGetter: (_, row: User) => `${row.apellido}, ${row.nombre}`,
+    },
     { field: "dni", headerName: "DNI", flex: 0.8, minWidth: 100 },
     { field: "email", headerName: "Email", flex: 1.5, minWidth: 200 },
+    {
+      field: "celular",
+      headerName: "Celular",
+      flex: 0.9,
+      minWidth: 140,
+      valueGetter: (value: string | null) => value || "-",
+    },
     {
       field: "instituto",
       headerName: "Instituto",

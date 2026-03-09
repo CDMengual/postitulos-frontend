@@ -1,4 +1,4 @@
-import { Cursante, CursanteAula } from "./cursante";
+import { AulaCursanteRow } from "./cursante";
 
 export interface Aula {
   id: number;
@@ -25,5 +25,5 @@ export interface Aula {
     nombre: string;
     apellido: string;
   }[];
-  cursantes?: CursanteAula[];
+  cursantes?: AulaCursanteRow[];
 }

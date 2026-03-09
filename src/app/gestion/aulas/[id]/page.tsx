@@ -85,6 +85,14 @@ export default function AulaDetailPage() {
           />
           <CardContent>
             <Typography>
+              <strong>Postitulo:</strong>{" "}
+              {aula.cohorte?.postitulo?.nombre || "-"}
+            </Typography>
+            <Typography>
+              <strong>Cohorte:</strong>{" "}
+              {aula.cohorte?.nombre || "-"}
+            </Typography>
+            <Typography>
               <strong>Instituto:</strong>{" "}
               {aula.instituto?.nombre || "No asignado"}
             </Typography>
@@ -114,6 +122,7 @@ export default function AulaDetailPage() {
         <CursantesTable
           data={aula.cursantes}
           aulaId={Number(id)}
+          aulaNombre={aula.nombre}
           onDeleted={getAula}
         />
 

@@ -23,9 +23,6 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 import { Cursante } from "@/types/cursante";
-import Pill from "@/components/ui/Pill";
-import { getEstadoCursanteMeta } from "@/constants/pillColor";
-import { getEstadoInscripcionCursante } from "@/utils/inscripcionEstado";
 
 interface Props {
   data: Cursante[];
@@ -77,21 +74,23 @@ export default function CursantesTable({
   };
 
   const columns: GridColDef[] = [
-    { field: "nombre", headerName: "Nombre", flex: 1 },
-    { field: "apellido", headerName: "Apellido", flex: 1 },
-    { field: "dni", headerName: "DNI", flex: 1 },
-    { field: "email", headerName: "Email", flex: 1.5 },
     {
-      field: "estadoInscripcion",
-      headerName: "Estado inscripcion",
-      flex: 1.2,
+      field: "apellidoNombre",
+      headerName: "Apellido y nombre",
+      flex: 1.3,
+      minWidth: 220,
       sortable: false,
-      renderCell: (params: GridRenderCellParams<Cursante>) => {
-        const estado = getEstadoInscripcionCursante(params.row);
-        const meta = getEstadoCursanteMeta(estado);
-        return <Pill label={meta.label} color={meta.color} variant="filled" />;
-      },
+      valueGetter: (_, row: Cursante) => `${row.apellido}, ${row.nombre}`,
     },
+    { field: "dni", headerName: "DNI", flex: 1 },
+    {
+      field: "celular",
+      headerName: "Celular",
+      flex: 1,
+      minWidth: 140,
+      valueGetter: (value: string | null | undefined) => value || "-",
+    },
+    { field: "email", headerName: "Email", flex: 1.5 },
     {
       field: "acciones",
       headerName: "Acciones",

@@ -8,7 +8,6 @@ import SchoolIcon from "@mui/icons-material/School";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import { Formulario } from "@/types/formulario";
-import { requisitosPorPostitulo } from "@/constants/requisitosPostitulo";
 import { formatDate } from "@/utils/date";
 
 interface Props {
@@ -18,7 +17,8 @@ interface Props {
 export default function FormularioInfo({ formulario }: Props) {
   const postitulo = formulario.postitulo;
   const cohorte = formulario.cohortes?.[0];
-  const requisitos = requisitosPorPostitulo[postitulo?.id ?? 0];
+  const requisitosExcluyentes = postitulo?.requisitos?.excluyentes ?? [];
+  const requisitosPrioritarios = postitulo?.requisitos?.prioritarios ?? [];
   const periodo =
     cohorte?.fechaInicioInscripcion && cohorte?.fechaFinInscripcion
       ? `${formatDate(cohorte.fechaInicioInscripcion, "short")} al ${formatDate(
@@ -176,71 +176,69 @@ export default function FormularioInfo({ formulario }: Props) {
           </Paper>
         )}
 
-        {/* Requisitos excluyentes */}
-        <Box>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 3,
-              border: "1px solid #e5e5e5",
-              boxShadow: "0 3px 8px rgba(0, 0, 0, 0.08)",
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
-              <CheckCircleOutlineIcon
-                sx={{ color: "primary.main", fontSize: 26 }}
-              />
-              <Typography variant="h6" fontWeight={600} color="primary.main">
-                Requisitos excluyentes
-              </Typography>
-            </Stack>
-            <Stack spacing={1.5}>
-              {requisitos.excluyentes.map((req, i) => (
-                <Box key={i} sx={{ display: "flex", gap: 1.5 }}>
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      bgcolor: "primary.main",
-                      mt: 1,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Typography variant="body2" lineHeight={1.7}>
-                    {req}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </Paper>
-        </Box>
+        {requisitosExcluyentes.length > 0 && (
+          <Box>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid #e5e5e5",
+                boxShadow: "0 3px 8px rgba(0, 0, 0, 0.08)",
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
+                <CheckCircleOutlineIcon
+                  sx={{ color: "primary.main", fontSize: 26 }}
+                />
+                <Typography variant="h6" fontWeight={600} color="primary.main">
+                  Requisitos excluyentes
+                </Typography>
+              </Stack>
+              <Stack spacing={1.5}>
+                {requisitosExcluyentes.map((req, i) => (
+                  <Box key={i} sx={{ display: "flex", gap: 1.5 }}>
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        bgcolor: "primary.main",
+                        mt: 1,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography variant="body2" lineHeight={1.7}>
+                      {req}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </Paper>
+          </Box>
+        )}
 
-        {/* Requisitos prioritarios */}
-        <Box>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 3,
-              border: "1px solid #e5e5e5",
-              boxShadow: "0 3px 8px rgba(0, 0, 0, 0.08)",
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
-              <CheckCircleOutlineIcon
-                sx={{ color: "info.main", fontSize: 26 }}
-              />
-              <Typography variant="h6" fontWeight={600} color="primary.main">
-                Requisitos prioritarios
-              </Typography>
-            </Stack>
-            <Stack spacing={1.5}>
-              {formulario.campos
-                .find((c) => c.id === "requisitos_prioritarios")
-                ?.options?.filter((opt) => opt !== "No")
-                .map((req, i) => (
+        {requisitosPrioritarios.length > 0 && (
+          <Box>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                border: "1px solid #e5e5e5",
+                boxShadow: "0 3px 8px rgba(0, 0, 0, 0.08)",
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1.5} mb={2}>
+                <CheckCircleOutlineIcon
+                  sx={{ color: "info.main", fontSize: 26 }}
+                />
+                <Typography variant="h6" fontWeight={600} color="primary.main">
+                  Requisitos prioritarios
+                </Typography>
+              </Stack>
+              <Stack spacing={1.5}>
+                {requisitosPrioritarios.map((req, i) => (
                   <Box key={i} sx={{ display: "flex", gap: 1.5 }}>
                     <Box
                       sx={{
@@ -261,9 +259,10 @@ export default function FormularioInfo({ formulario }: Props) {
                     </Typography>
                   </Box>
                 ))}
-            </Stack>
-          </Paper>
-        </Box>
+              </Stack>
+            </Paper>
+          </Box>
+        )}
 
         {/* Nota importante */}
         <Paper

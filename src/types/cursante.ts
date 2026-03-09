@@ -1,4 +1,4 @@
-export type EstadoInscripcion =
+﻿export type EstadoInscripcion =
   | "INSCRIPTO"
   | "EN_REVISION"
   | "ADMITIDO"
@@ -8,6 +8,7 @@ export type EstadoInscripcion =
 export type EstadoCursada = "ACTIVO" | "ADEUDA" | "BAJA";
 
 export type EstadoCursante = EstadoInscripcion | EstadoCursada;
+export type DocumentacionCursante = "VERIFICADA" | "PENDIENTE" | "NO_CORRESPONDE";
 
 export interface Cursante {
   id: number;
@@ -17,23 +18,82 @@ export interface Cursante {
   email?: string | null;
   celular?: string | null;
   titulo?: string | null;
+  regionId?: number | null;
+  distritoId?: number | null;
+  distrito?: {
+    id: number;
+    nombre: string;
+    regionId: number | null;
+  } | null;
   estadoInscripcion?: EstadoInscripcion;
   createdAt?: string;
   updatedAt?: string;
-  // Relación explícita con aulas (cada inscripción)
-  inscripciones: CursanteAula[];
+  // RelaciÃ³n explÃ­cita con aulas (cada inscripciÃ³n)
+  inscripciones?: CursanteAula[];
+}
+
+export interface CursanteDetalleAula {
+  cursante: Pick<
+    Cursante,
+    | "id"
+    | "nombre"
+    | "apellido"
+    | "dni"
+    | "email"
+    | "celular"
+    | "titulo"
+    | "regionId"
+    | "distritoId"
+    | "distrito"
+  >;
+  inscripcionAula: {
+    aulaId: number;
+    aula?: {
+      id: number;
+      nombre: string;
+      codigo: string;
+      numero: number;
+    } | null;
+    cursanteId: number;
+    estado: EstadoCursante;
+    documentacion: DocumentacionCursante;
+    observaciones?: string | null;
+    dniAdjuntoUrl?: string | null;
+    tituloAdjuntoUrl?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+}
+
+export interface AulaCursanteRow
+  extends Pick<
+    Cursante,
+    | "id"
+    | "nombre"
+    | "apellido"
+    | "dni"
+    | "email"
+    | "celular"
+    | "titulo"
+    | "regionId"
+    | "distritoId"
+  > {
+  estado: EstadoCursante;
+  documentacion: DocumentacionCursante;
+  dniAdjuntoUrl?: string | null;
+  tituloAdjuntoUrl?: string | null;
 }
 
 /**
- * Representa la relación entre un cursante y un aula.
- * Contiene el estado, documentación y observaciones específicas de esa inscripción.
+ * Representa la relaciÃ³n entre un cursante y un aula.
+ * Contiene el estado, documentaciÃ³n y observaciones especÃ­ficas de esa inscripciÃ³n.
  */
 export interface CursanteAula {
   id: number;
   cursanteId: number;
   aulaId: number;
   estado: EstadoCursante;
-  documentacion: "VERIFICADA" | "PENDIENTE" | "NO_CORRESPONDE";
+  documentacion: DocumentacionCursante;
   observaciones?: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -43,7 +103,7 @@ export interface CursanteAula {
   aula?: AulaRef;
 }
 
-/** Simplificación del Aula que se usa dentro del cursante */
+/** SimplificaciÃ³n del Aula que se usa dentro del cursante */
 export interface AulaRef {
   id: number;
   nombre: string;
@@ -69,3 +129,4 @@ export interface AulaRef {
     };
   };
 }
+

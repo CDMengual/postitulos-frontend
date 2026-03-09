@@ -57,6 +57,7 @@ export interface CohortePublica {
     tipos?: Postitulo["tipos"];
     resolucion?: Postitulo["resolucion"];
     planEstudios?: Postitulo["planEstudios"];
+    requisitos?: Postitulo["requisitos"];
   };
 
   formulario: Pick<Formulario, "id" | "nombre" | "campos"> | null;

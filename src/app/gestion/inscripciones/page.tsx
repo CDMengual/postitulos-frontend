@@ -139,6 +139,13 @@ export default function InscripcionesPage() {
   }, [visibleCohortes]);
 
   const getInscripciones = useCallback(async () => {
+    if (!cohorteId) {
+      setRows([]);
+      setTotal(0);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await api.get<InscripcionesListApiResponse>(`/inscripciones?${queryString}`);
@@ -243,7 +250,7 @@ export default function InscripcionesPage() {
     const previousInstituto = row.instituto;
     const allowedInstitutos = allowedInstitutosByCohorte[row.cohorteId] ?? [];
     const nextInstituto = newInstitutoId
-      ? allowedInstitutos.find((item) => item.id === newInstitutoId) ?? null
+      ? (allowedInstitutos.find((item) => item.id === newInstitutoId) ?? null)
       : null;
 
     setRows((prev) =>
@@ -260,7 +267,7 @@ export default function InscripcionesPage() {
     setRowSaving(id, true);
 
     try {
-      await api.patch(`/inscripciones/${id}`, { institutoId: newInstitutoId });
+      await api.patch(`/inscripciones/${id}/instituto`, { institutoId: newInstitutoId });
     } catch {
       setRows((prev) =>
         prev.map((item) =>
@@ -300,12 +307,7 @@ export default function InscripcionesPage() {
       if (region !== null) return region;
     }
 
-    const distritoCandidateKeys = [
-      "distritoId",
-      "distrito_id",
-      "distrito",
-      "distrito_residencia",
-    ];
+    const distritoCandidateKeys = ["distritoId", "distrito_id", "distrito", "distrito_residencia"];
     for (const key of distritoCandidateKeys) {
       const distritoId = getNumber(datosFormulario[key]);
       if (distritoId !== null && distritoToRegion[distritoId] !== undefined) {
@@ -372,8 +374,7 @@ export default function InscripcionesPage() {
           ? []
           : capacities.filter(
               (entry) =>
-                entry.instituto.regionId === inscripto.regionId &&
-                entry.assigned < entry.limit
+                entry.instituto.regionId === inscripto.regionId && entry.assigned < entry.limit
             );
 
       if (regionPool.length > 0) {
@@ -415,19 +416,21 @@ export default function InscripcionesPage() {
       }
 
       const [institutosRes, distritosRes] = await Promise.all([
-        api.get<{ success: boolean; data: { id: number; nombre: string; regionId: number | null }[] }>(
-          "/institutos"
-        ),
+        api.get<{
+          success: boolean;
+          data: { id: number; nombre: string; regionId: number | null }[];
+        }>("/institutos"),
         api.get<{ success: boolean; data: DistritoRef[] }>("/distritos"),
       ]);
 
       const institutosMeta = institutosRes.data.data || [];
-      const distritoToRegion = (distritosRes.data.data || []).reduce<
-        Record<number, number | null>
-      >((acc, distrito) => {
-        acc[distrito.id] = distrito.regionId ?? null;
-        return acc;
-      }, {});
+      const distritoToRegion = (distritosRes.data.data || []).reduce<Record<number, number | null>>(
+        (acc, distrito) => {
+          acc[distrito.id] = distrito.regionId ?? null;
+          return acc;
+        },
+        {}
+      );
 
       const allowedInstitutoOptions: InstitutoOption[] = allowedInstitutos.map((instituto) => {
         const meta = institutosMeta.find((m) => m.id === instituto.id);
@@ -607,6 +610,14 @@ export default function InscripcionesPage() {
           sx={{ minWidth: 280 }}
         />
       </Stack>
+
+      {!cohorteId && (
+        <Box mb={2}>
+          <Typography variant="body2" color="text.secondary">
+            Selecciona una cohorte para ver las inscripciones.
+          </Typography>
+        </Box>
+      )}
 
       <InscripcionesTable
         rows={sortedRows}

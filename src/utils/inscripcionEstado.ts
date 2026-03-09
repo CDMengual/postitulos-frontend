@@ -18,7 +18,7 @@ export function getEstadoInscripcionCursante(cursante: Cursante): EstadoInscripc
     return cursante.estadoInscripcion;
   }
 
-  const estadoDesdeInscripcion = cursante.inscripciones.find((insc) =>
+  const estadoDesdeInscripcion = (cursante.inscripciones ?? []).find((insc) =>
     isEstadoInscripcion(insc.estado)
   )?.estado;
 

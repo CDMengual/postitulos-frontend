@@ -119,6 +119,7 @@ export default function CursanteDetailPage() {
 
   const estadoInscripcionActual = getEstadoInscripcionCursante(cursante);
   const puedeAsignarAula = estadoInscripcionActual === "ADMITIDO";
+  const regionId = cursante.distrito?.regionId ?? cursante.regionId;
 
   return (
     <>
@@ -180,6 +181,21 @@ export default function CursanteDetailPage() {
                   </Typography>
                   <Typography fontWeight={500}>{cursante.celular || "-"}</Typography>
                 </Box>
+
+                <Box flex={0.5}>
+                  <Typography variant="body2" color="text.secondary">
+                    Región
+                  </Typography>
+                  <Typography fontWeight={500}>
+                    {regionId !== null && regionId !== undefined ? String(regionId) : "-"}
+                  </Typography>
+                </Box>
+                <Box flex={1}>
+                  <Typography variant="body2" color="text.secondary">
+                    Distrito
+                  </Typography>
+                  <Typography fontWeight={500}>{cursante.distrito?.nombre || "-"}</Typography>
+                </Box>
               </Stack>
 
               <Stack
@@ -200,7 +216,7 @@ export default function CursanteDetailPage() {
           </Accordion>
         </Stack>
 
-        {cursante.inscripciones.map((insc) => (
+        {(cursante.inscripciones ?? []).map((insc) => (
           <Stack key={insc.id} mb={4}>
             <Accordion className="customAccordion">
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -217,6 +233,15 @@ export default function CursanteDetailPage() {
 
               <AccordionDetails>
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2} flexWrap="wrap" mb={3}>
+                  <Box flex={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      Postitulo
+                    </Typography>
+                    <Typography fontWeight={500}>
+                      {insc.aula?.cohorte.postitulo.nombre || "-"}
+                    </Typography>
+                  </Box>
+
                   <Box flex={1}>
                     <Typography variant="body2" color="text.secondary">
                       Instituto
@@ -226,7 +251,7 @@ export default function CursanteDetailPage() {
 
                   <Box flex={1}>
                     <Typography variant="body2" color="text.secondary">
-                      Estado de inscripción/cursada
+                      Estado de cursada
                     </Typography>
 
                     <Pill

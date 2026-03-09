@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack,
+  Typography,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BackButton from "@/components/ui/BackButton";
 import AulasTable from "./components/AulasTable";
@@ -9,33 +18,74 @@ import AulaFormDialog from "./components/AulaFormDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDeleteDialog";
 import api from "@/services/api";
 import { useUserContext } from "@/components/providers/UserProvider";
-import {Aula} from "@/types/aula"
+import { Aula } from "@/types/aula";
+import { getEstadoCohorteMeta } from "@/constants/pillColor";
+import { Postitulo } from "@/types/postitulo";
 
+interface PostitulosResponse {
+  success: boolean;
+  message: string;
+  data: Postitulo[];
+  meta?: { total?: number };
+}
 
+const ESTADO_COHORTE_FILTER_OPTIONS = [
+  "INSCRIPCION",
+  "ACTIVA",
+  "FINALIZADA",
+  "INACTIVA",
+  "CANCELADA",
+] as const;
 
 export default function AulasPage() {
   const { user } = useUserContext();
   const [aulas, setAulas] = useState<Aula[]>([]);
+  const [postitulos, setPostitulos] = useState<Postitulo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Aula | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [estadoFilter, setEstadoFilter] = useState("ALL");
+  const [postituloFilter, setPostituloFilter] = useState("");
 
-  const getAulas = async () => {
+  const getAulas = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get("/aulas");
+      const params: Record<string, string> = {};
+
+      if (estadoFilter) {
+        params.estado = estadoFilter;
+      }
+
+      if (postituloFilter) {
+        params.postituloId = postituloFilter;
+      }
+
+      const response = await api.get("/aulas", { params });
       setAulas(response.data.data);
     } catch (err) {
       console.error("Error getting aulas:", err);
     } finally {
       setLoading(false);
     }
+  }, [estadoFilter, postituloFilter]);
+
+  const getPostitulos = async () => {
+    try {
+      const response = await api.get<PostitulosResponse>("/postitulos");
+      setPostitulos(response.data.data);
+    } catch (err) {
+      console.error("Error getting postitulos:", err);
+    }
   };
 
   useEffect(() => {
-    getAulas();
+    getPostitulos();
   }, []);
+
+  useEffect(() => {
+    getAulas();
+  }, [getAulas]);
 
   const handleCreate = () => {
     setSelected(null);
@@ -64,6 +114,22 @@ export default function AulasPage() {
     getAulas();
   };
 
+  const estadoOptions = useMemo(
+    () =>
+      [...ESTADO_COHORTE_FILTER_OPTIONS].sort((a, b) =>
+        getEstadoCohorteMeta(a).label.localeCompare(getEstadoCohorteMeta(b).label)
+      ),
+    []
+  );
+
+  const postituloOptions = useMemo(
+    () =>
+      [...postitulos].sort((a, b) =>
+        `${a.nombre} ${a.codigo ?? ""}`.localeCompare(`${b.nombre} ${b.codigo ?? ""}`)
+      ),
+    [postitulos]
+  );
+
   return (
     <>
       <BackButton sx={{ mb: 2 }} />
@@ -86,6 +152,51 @@ export default function AulasPage() {
               Crear aula
             </Button>
           )}
+        </Stack>
+
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          spacing={2}
+          mb={3}
+          alignItems={{ xs: "stretch", md: "center" }}
+        >
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", md: 220 } }}>
+            <InputLabel id="aulas-estado-filter-label">Estado</InputLabel>
+            <Select
+              labelId="aulas-estado-filter-label"
+              label="Estado"
+              value={estadoFilter}
+              onChange={(event) => setEstadoFilter(event.target.value)}
+            >
+              <MenuItem value="ALL">Todos</MenuItem>
+              {estadoOptions.map((estado) => (
+                <MenuItem key={estado} value={estado}>
+                  {getEstadoCohorteMeta(estado).label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", md: 280 } }}>
+            <InputLabel id="aulas-postitulo-filter-label">Postitulo</InputLabel>
+            <Select
+              labelId="aulas-postitulo-filter-label"
+              label="Postitulo"
+              value={postituloFilter}
+              onChange={(event) => setPostituloFilter(event.target.value)}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              {postituloOptions.map((postitulo) => (
+                <MenuItem key={postitulo.id} value={String(postitulo.id)}>
+                  {postitulo.nombre} ({postitulo.codigo})
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Typography variant="body2" color="text.secondary">
+            {aulas.length} aula{aulas.length === 1 ? "" : "s"}
+          </Typography>
         </Stack>
 
         <AulasTable data={aulas} loading={loading} onDelete={handleDelete} />

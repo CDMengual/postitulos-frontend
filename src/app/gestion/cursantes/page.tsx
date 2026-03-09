@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Box, Button, Stack, Typography, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
+import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CursantesTable from "./components/CursantesTable";
 import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
 import api from "@/services/api";
-import { Cursante, EstadoInscripcion } from "@/types/cursante";
+import { Cursante } from "@/types/cursante";
 import CursanteFormDialog from "./components/CursanteFormDialog";
 import { appToast } from "@/utils/toast";
-import { getEstadoInscripcionCursante } from "@/utils/inscripcionEstado";
 
 interface ApiResponse {
   success: boolean;
@@ -25,21 +24,37 @@ interface ApiResponse {
 
 export default function CursantesPage() {
   const [cursantes, setCursantes] = useState<Cursante[]>([]);
-  const [filtroEstado, setFiltroEstado] = useState<"TODOS" | EstadoInscripcion>("TODOS");
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Cursante | null>(null);
   const [openForm, setOpenForm] = useState(false);
   const [openConfirm, setOpenConfirm] = useState(false);
 
-  const getCursantes = async (pageParam = 1, limitParam = 10) => {
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
+  const getCursantes = useCallback(async (pageParam = 1, limitParam = 10, searchParam = "") => {
     setLoading(true);
     try {
-      const response = await api.get<ApiResponse>(
-        `/cursantes?page=${pageParam}&limit=${limitParam}`
-      );
+      const params: Record<string, string | number> = {
+        page: pageParam,
+        limit: limitParam,
+      };
+
+      if (searchParam) {
+        params.search = searchParam;
+      }
+
+      const response = await api.get<ApiResponse>("/cursantes", { params });
       const { cursantes, total } = response.data.data;
       setCursantes(cursantes);
       setTotal(total);
@@ -51,14 +66,14 @@ export default function CursantesPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    getCursantes();
   }, []);
 
+  useEffect(() => {
+    getCursantes(1, pageSize, debouncedSearch);
+  }, [debouncedSearch, getCursantes, pageSize]);
+
   const handlePageChange = (newPage: number, newPageSize: number) => {
-    getCursantes(newPage, newPageSize);
+    getCursantes(newPage, newPageSize, debouncedSearch);
   };
 
   const handleCreate = () => {
@@ -82,7 +97,7 @@ export default function CursantesPage() {
     try {
       await api.delete(`/cursantes/${selected.id}`);
       appToast.success("Cursante eliminado correctamente");
-      await getCursantes(page, pageSize);
+      await getCursantes(page, pageSize, debouncedSearch);
     } catch {
       appToast.error();
     } finally {
@@ -93,42 +108,31 @@ export default function CursantesPage() {
 
   const handleFormSaved = async () => {
     setOpenForm(false);
-    await getCursantes(page, pageSize);
+    await getCursantes(page, pageSize, debouncedSearch);
   };
-
-  const cursantesFiltrados = cursantes.filter((cursante) => {
-    if (filtroEstado === "TODOS") return true;
-    return getEstadoInscripcionCursante(cursante) === filtroEstado;
-  });
 
   return (
     <Box p={3}>
       <Stack
-        direction="row"
+        direction={{ xs: "column", md: "row" }}
         justifyContent="space-between"
-        alignItems="center"
+        alignItems={{ xs: "stretch", md: "center" }}
+        spacing={2}
         mb={3}
       >
         <Typography variant="h5" fontWeight={600}>
           Cursantes ({total})
         </Typography>
-        <Stack direction="row" spacing={2}>
-          <FormControl size="small" sx={{ minWidth: 220 }}>
-            <InputLabel id="estado-inscripcion-filter-label">Estado inscripción</InputLabel>
-            <Select
-              labelId="estado-inscripcion-filter-label"
-              label="Estado inscripción"
-              value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value as "TODOS" | EstadoInscripcion)}
-            >
-              <MenuItem value="TODOS">Todos</MenuItem>
-              <MenuItem value="INSCRIPTO">Inscripto</MenuItem>
-              <MenuItem value="EN_REVISION">En revisión</MenuItem>
-              <MenuItem value="ADMITIDO">Admitido</MenuItem>
-              <MenuItem value="LISTA_ESPERA">Lista de espera</MenuItem>
-              <MenuItem value="RECHAZADO">Rechazado</MenuItem>
-            </Select>
-          </FormControl>
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <TextField
+            size="small"
+            label="Buscar cursante"
+            placeholder="Nombre, apellido, email o DNI"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            sx={{ minWidth: { xs: "100%", sm: 320 } }}
+          />
 
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
             Nuevo Cursante
@@ -137,8 +141,8 @@ export default function CursantesPage() {
       </Stack>
 
       <CursantesTable
-        data={cursantesFiltrados}
-        total={filtroEstado === "TODOS" ? total : cursantesFiltrados.length}
+        data={cursantes}
+        total={total}
         page={page}
         pageSize={pageSize}
         loading={loading}

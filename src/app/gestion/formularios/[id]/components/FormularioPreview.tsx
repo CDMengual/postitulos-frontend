@@ -33,7 +33,7 @@ interface Distrito {
 interface FormDataState {
   distritoId: number | null;
   regionId: number | null;
-  [key: string]: string | string[] | number | boolean | null;
+  [key: string]: string | string[] | number | boolean | File | null;
 }
 
 const getFieldKey = (id: string | undefined, index: number) => id || `campo_${index}`;
@@ -208,14 +208,17 @@ export default function FormularioPreview({ formulario }: Props) {
               );
             }
 
-            if (["text", "email", "number"].includes(campo.type)) {
+            if (["text", "email", "number", "date", "textarea"].includes(campo.type)) {
               return (
                 <TextField
                   key={key}
                   label={campo.label}
-                  type={campo.type}
+                  type={campo.type === "textarea" ? "text" : campo.type}
                   required={campo.required}
                   fullWidth
+                  multiline={campo.type === "textarea"}
+                  minRows={campo.type === "textarea" ? 3 : undefined}
+                  value={(formData[key] as string | number | undefined) ?? ""}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -243,6 +246,42 @@ export default function FormularioPreview({ formulario }: Props) {
                     <FormControlLabel value="false" control={<Radio />} label="No" />
                   </RadioGroup>
                 </FormControl>
+              );
+            }
+
+            if (campo.type === "file") {
+              return (
+                <Stack key={key} spacing={1}>
+                  <FormLabel sx={{ fontWeight: 500 }}>
+                    {campo.label}
+                    {campo.required ? " *" : ""}
+                  </FormLabel>
+
+                  <Button variant="outlined" component="label">
+                    Seleccionar archivo
+                    <input
+                      type="file"
+                      hidden
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [key]: e.target.files?.[0] || null,
+                        }))
+                      }
+                    />
+                  </Button>
+
+                  {formData[key] instanceof File ? (
+                    <Typography variant="caption" color="text.secondary">
+                      {(formData[key] as File).name}
+                    </Typography>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      Permite adjuntar PDF, JPG o PNG
+                    </Typography>
+                  )}
+                </Stack>
               );
             }
 

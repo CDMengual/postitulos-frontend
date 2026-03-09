@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Accordion,
@@ -12,9 +12,11 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import BackButton from "@/components/ui/BackButton";
 import Pill from "@/components/ui/Pill";
+import CohorteSnapshotsSection from "@/components/cohortes/CohorteSnapshotsSection";
 import api from "@/services/api";
 import { Cohorte } from "@/types/cohorte";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
@@ -76,6 +78,50 @@ export default function CohorteDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  const institutosRows = useMemo(
+    () =>
+      [...(cohorte?.institutos ?? [])]
+        .map((instituto) => {
+          const meta = institutosMeta[instituto.id];
+
+          return {
+            id: instituto.id,
+            region:
+              meta?.regionId !== null && meta?.regionId !== undefined ? String(meta.regionId) : "-",
+            regionOrden: meta?.regionId ?? Number.MAX_SAFE_INTEGER,
+            distrito: meta?.distritoNombre || `Distrito ${instituto.distritoId}`,
+            nombre: instituto.nombre,
+          };
+        })
+        .sort((a, b) => {
+          if (a.regionOrden !== b.regionOrden) return a.regionOrden - b.regionOrden;
+          const distritoCompare = a.distrito.localeCompare(b.distrito);
+          if (distritoCompare !== 0) return distritoCompare;
+          return a.nombre.localeCompare(b.nombre);
+        }),
+    [cohorte?.institutos, institutosMeta]
+  );
+
+  const institutosColumns: GridColDef[] = [
+    {
+      field: "region",
+      headerName: "Region",
+      width: 110,
+    },
+    {
+      field: "distrito",
+      headerName: "Distrito",
+      flex: 1,
+      minWidth: 200,
+    },
+    {
+      field: "nombre",
+      headerName: "Instituto",
+      flex: 1.5,
+      minWidth: 260,
+    },
+  ];
+
   if (loading && !cohorte) {
     return (
       <Stack minHeight="50vh" alignItems="center" justifyContent="center">
@@ -117,23 +163,22 @@ export default function CohorteDetailPage() {
         <Stack mb={3}>
           <Accordion defaultExpanded className="customAccordion">
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography>Información general</Typography>
+              <Typography>Informacion general</Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={3} flexWrap="wrap" mb={2}>
                 <Box flex={4}>
                   <Typography variant="body2" color="text.secondary">
-                    Postítulo
+                    Postitulo
                   </Typography>
                   <Typography fontWeight={500}>{cohorte.postitulo?.nombre || "-"}</Typography>
                 </Box>
                 <Box flex={1}>
                   <Typography variant="body2" color="text.secondary">
-                    Año
+                    Ano
                   </Typography>
                   <Typography fontWeight={500}>{cohorte.anio}</Typography>
                 </Box>
-
                 <Box flex={2}>
                   <Typography variant="body2" color="text.secondary">
                     Cantidad de aulas
@@ -157,63 +202,40 @@ export default function CohorteDetailPage() {
               <Typography>Institutos asignados</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              {!cohorte.institutos?.length ? (
+              {!institutosRows.length ? (
                 <Typography color="text.secondary">No hay institutos asignados.</Typography>
               ) : (
-                <Stack spacing={2}>
-                  {[...cohorte.institutos]
-                    .sort((a, b) => {
-                      const regionA = institutosMeta[a.id]?.regionId ?? Number.MAX_SAFE_INTEGER;
-                      const regionB = institutosMeta[b.id]?.regionId ?? Number.MAX_SAFE_INTEGER;
-                      if (regionA !== regionB) return regionA - regionB;
-
-                      const distritoA = institutosMeta[a.id]?.distritoNombre || "";
-                      const distritoB = institutosMeta[b.id]?.distritoNombre || "";
-                      return distritoA.localeCompare(distritoB);
-                    })
-                    .map((instituto) => {
-                      const meta = institutosMeta[instituto.id];
-                      const distrito = meta?.distritoNombre || `Distrito ${instituto.distritoId}`;
-                      const region =
-                        meta?.regionId !== null && meta?.regionId !== undefined
-                          ? `${meta.regionId}`
-                          : "-";
-
-                      return (
-                        <Box
-                          key={instituto.id}
-                          sx={{
-                            border: "1px solid",
-                            borderColor: "divider",
-                            borderRadius: 2,
-                            p: 2,
-                          }}
-                        >
-                          <Stack direction={{ xs: "column", sm: "row" }} spacing={3}>
-                            <Box flex={0.5}>
-                              <Typography variant="body2" color="text.secondary">
-                                Región
-                              </Typography>
-                              <Typography fontWeight={500}>{region}</Typography>
-                            </Box>
-                            <Box flex={1}>
-                              <Typography variant="body2" color="text.secondary">
-                                Distrito
-                              </Typography>
-                              <Typography fontWeight={500}>{distrito}</Typography>
-                            </Box>
-                            <Box flex={2}>
-                              <Typography variant="body2" color="text.secondary">
-                                Instituto
-                              </Typography>
-                              <Typography fontWeight={500}>{instituto.nombre}</Typography>
-                            </Box>
-                          </Stack>
-                        </Box>
-                      );
-                    })}
-                </Stack>
+                <Box sx={{ width: "100%", minHeight: 420 }}>
+                  <DataGrid
+                    rows={institutosRows}
+                    columns={institutosColumns}
+                    disableRowSelectionOnClick
+                    initialState={{
+                      sorting: {
+                        sortModel: [{ field: "region", sort: "asc" }],
+                      },
+                      pagination: {
+                        paginationModel: { pageSize: 10, page: 0 },
+                      },
+                    }}
+                    pageSizeOptions={[10, 25, 50]}
+                    localeText={{
+                      noRowsLabel: "No hay institutos asignados.",
+                    }}
+                  />
+                </Box>
               )}
+            </AccordionDetails>
+          </Accordion>
+        </Stack>
+
+        <Stack mb={3}>
+          <Accordion className="customAccordion">
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>Evolucion mensual</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <CohorteSnapshotsSection cohorteId={cohorte.id} />
             </AccordionDetails>
           </Accordion>
         </Stack>
@@ -239,7 +261,7 @@ export default function CohorteDetailPage() {
                 </Box>
                 <Box flex={1}>
                   <Typography variant="body2" color="text.secondary">
-                    Inicio inscripción
+                    Inicio inscripcion
                   </Typography>
                   <Typography fontWeight={500}>
                     {formatDate(cohorte.fechaInicioInscripcion)}
@@ -247,7 +269,7 @@ export default function CohorteDetailPage() {
                 </Box>
                 <Box flex={1}>
                   <Typography variant="body2" color="text.secondary">
-                    Fin inscripción
+                    Fin inscripcion
                   </Typography>
                   <Typography fontWeight={500}>
                     {formatDate(cohorte.fechaFinInscripcion)}

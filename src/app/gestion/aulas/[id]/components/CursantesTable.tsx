@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import {
   Box,
@@ -17,35 +18,42 @@ import {
   Visibility as VisibilityIcon,
 } from "@mui/icons-material";
 import api from "@/services/api";
-import { Cursante, CursanteAula } from "@/types/cursante";
+import { AulaCursanteRow, DocumentacionCursante, EstadoCursante } from "@/types/cursante";
 
 import ConfirmDeleteDialog from "@/components/ui/ConfirmDeleteDialog";
 import PillMenu from "@/components/ui/PillMenu";
 import {
-  getEstadoCursanteMeta,
   getDocumentacionCursanteMeta,
+  getEstadoCursanteMeta,
 } from "@/constants/pillColor";
 
 interface Props {
-  data?: CursanteAula[];
+  data?: AulaCursanteRow[];
   aulaId: number;
+  aulaNombre?: string;
   onDeleted?: () => void;
 }
 
 export default function CursantesTable({
   data = [],
   aulaId,
+  aulaNombre,
   onDeleted,
 }: Props) {
-  const [rows, setRows] = useState<CursanteAula[]>(data);
+  const router = useRouter();
+  const [rows, setRows] = useState<AulaCursanteRow[]>(data);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selected, setSelected] = useState<CursanteAula | null>(null);
+  const [selected, setSelected] = useState<AulaCursanteRow | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    setRows(data);
+  }, [data]);
 
   // 🔹 Abrir menú de opciones
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
-    cursante: CursanteAula
+    cursante: AulaCursanteRow
   ) => {
     setAnchorEl(event.currentTarget);
     setSelected(cursante);
@@ -69,7 +77,7 @@ export default function CursantesTable({
   // 🔹 Actualización local tras editar estado o documentación
   const handleLocalUpdate = (
     id: number,
-    field: keyof CursanteAula,
+    field: keyof AulaCursanteRow,
     value: string
   ) => {
     setRows((prev) =>
@@ -84,38 +92,6 @@ export default function CursantesTable({
     { field: "dni", headerName: "DNI", width: 130 },
     { field: "email", headerName: "Email", flex: 1.2 },
     { field: "celular", headerName: "Celular", flex: 1.2 },
-    {
-      field: "documentacion",
-      headerName: "Documentación",
-      flex: 1.2,
-      renderCell: (params) => {
-        const opciones = ["VERIFICADA", "PENDIENTE", "NO_CORRESPONDE"].map(
-          (v) => ({
-            value: v,
-            label: getDocumentacionCursanteMeta(v).label,
-            color: getDocumentacionCursanteMeta(v).color as string,
-          })
-        );
-
-        return (
-          <PillMenu
-            value={params.value}
-            options={opciones}
-            onChange={async (nuevoValor) => {
-              try {
-                await api.patch(
-                  `/aulas/${aulaId}/cursantes/${params.row.id}/documentacion`,
-                  { documentacion: nuevoValor }
-                );
-                handleLocalUpdate(params.row.id, "documentacion", nuevoValor);
-              } catch (e) {
-                console.error("Error al actualizar documentación", e);
-              }
-            }}
-          />
-        );
-      },
-    },
     {
       field: "estado",
       headerName: "Estado",
@@ -141,9 +117,46 @@ export default function CursantesTable({
                   `/aulas/${aulaId}/cursantes/${params.row.id}/estado`,
                   { estado: nuevoValor }
                 );
-                handleLocalUpdate(params.row.id, "estado", nuevoValor);
+                handleLocalUpdate(params.row.id, "estado", nuevoValor as EstadoCursante);
               } catch (e) {
                 console.error("Error al actualizar estado", e);
+              }
+            }}
+          />
+        );
+      },
+    },
+    {
+      field: "documentacion",
+      headerName: "Documentacion",
+      flex: 1.2,
+      renderCell: (params) => {
+        const opciones = ["VERIFICADA", "PENDIENTE", "NO_CORRESPONDE"].map((value) => {
+          const meta = getDocumentacionCursanteMeta(value);
+          return {
+            value,
+            label: meta.label,
+            color: meta.color as string,
+          };
+        });
+
+        return (
+          <PillMenu
+            value={params.value}
+            options={opciones}
+            onChange={async (nuevoValor) => {
+              try {
+                await api.patch(
+                  `/aulas/${aulaId}/cursantes/${params.row.id}/documentacion`,
+                  { documentacion: nuevoValor }
+                );
+                handleLocalUpdate(
+                  params.row.id,
+                  "documentacion",
+                  nuevoValor as DocumentacionCursante
+                );
+              } catch (e) {
+                console.error("Error al actualizar documentacion", e);
               }
             }}
           />
@@ -195,7 +208,14 @@ export default function CursantesTable({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <MenuItem disabled>
+        <MenuItem
+          onClick={() => {
+            if (!selected) return;
+            const query = aulaNombre ? `?aulaNombre=${encodeURIComponent(aulaNombre)}` : "";
+            router.push(`/gestion/aulas/${aulaId}/cursantes/${selected.id}${query}`);
+            handleMenuClose();
+          }}
+        >
           <ListItemIcon>
             <VisibilityIcon fontSize="small" />
           </ListItemIcon>
@@ -221,9 +241,7 @@ export default function CursantesTable({
         onConfirm={handleConfirmDelete}
         title="Eliminar cursante"
         message="¿Seguro que querés eliminar a"
-        highlightText={`${selected?.cursante?.nombre || ""} ${
-          selected?.cursante?.apellido || ""
-        }`}
+        highlightText={`${selected?.nombre || ""} ${selected?.apellido || ""}`}
         confirmLabel="Eliminar"
         confirmColor="error"
       />

@@ -1,3 +1,8 @@
+export interface RequisitosPostitulo {
+  excluyentes?: string[] | null;
+  prioritarios?: string[] | null;
+}
+
 export interface Postitulo {
   id: number;
   nombre: string;
@@ -14,6 +19,7 @@ export interface Postitulo {
   cargaHoraria?: number | null;
   horasSincronicas?: number | null;
   horasVirtuales?: number | null;
+  requisitos?: RequisitosPostitulo | null;
   createdAt?: string;
   updatedAt?: string;
   tipos: PostituloTipo[];

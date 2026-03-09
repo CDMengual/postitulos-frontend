@@ -61,6 +61,7 @@ interface UploadSignResponse {
 }
 
 interface DuplicateInscripcionErrorData {
+  success?: boolean;
   message?: string;
   error?: {
     details?: {
@@ -264,9 +265,15 @@ export default function FormularioForm({ formulario, cohorte }: Props) {
         const status = err.response?.status;
         const data = err.response?.data as DuplicateInscripcionErrorData | undefined;
         const appCode = data?.error?.details?.appCode;
+        const message = data?.message;
 
         if (status === 409 && appCode === "INSCRIPCION_DUPLICADA_COHORTE_DNI") {
           setDuplicateDialogOpen(true);
+          return;
+        }
+
+        if (status === 400 && message === "La cohorte no tiene cupos disponibles") {
+          appToast.error("La cohorte no tiene cupos disponibles");
           return;
         }
       }
