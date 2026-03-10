@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import BackButton from "@/shared/components/ui/BackButton";
 import ConfirmDialog from "@/shared/components/ui/ConfirmDeleteDialog";
 import { useUserContext } from "@/shared/components/providers/UserProvider";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
@@ -80,7 +79,6 @@ export default function AulasPage() {
 
   return (
     <>
-      <BackButton sx={{ mb: 2 }} />
       <Box p={3}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
           <Typography variant="h5" fontWeight={600}>
