@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
 import BackButton from "@/shared/components/ui/BackButton";
 import Pill from "@/shared/components/ui/Pill";
 import { getEstadoCohorteMeta } from "@/constants/pillColor";
@@ -19,6 +20,7 @@ import { useState } from "react";
 
 export default function AulaDetailPage() {
   const { id } = useParams();
+  const { user } = useUserContext();
   const aulaId = Number(id);
   const [openAdd, setOpenAdd] = useState(false);
   const { aula, loading, refresh } = useAulaDetail(aulaId);
@@ -70,18 +72,22 @@ export default function AulaDetailPage() {
           </CardContent>
         </Card>
 
-        <Stack direction="row" justifyContent="flex-end" mt={2} mb={2}>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenAdd(true)}>
-            Inscribir cursantes
-          </Button>
-        </Stack>
+        {user?.rol === "ADMIN" && (
+          <Stack direction="row" justifyContent="flex-end" mt={2}>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenAdd(true)}>
+              Inscribir cursantes
+            </Button>
+          </Stack>
+        )}
 
-        <AulaCursantesTable
-          data={aula.cursantes}
-          aulaId={aulaId}
-          aulaNombre={aula.nombre}
-          onDeleted={() => void refresh()}
-        />
+        <Box mt={2}>
+          <AulaCursantesTable
+            data={aula.cursantes}
+            aulaId={aulaId}
+            aulaNombre={aula.nombre}
+            onDeleted={() => void refresh()}
+          />
+        </Box>
 
         <AulaCursanteAddDialog
           open={openAdd}
