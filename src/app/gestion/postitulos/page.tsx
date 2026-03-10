@@ -21,12 +21,14 @@ import {
 } from "@mui/material";
 import { getPostituloTypeMeta } from "@/constants/pillColor";
 import { Postitulo, PostituloFormDialog, usePostitulos } from "@/features/postitulos";
+import { useUserContext } from "@/shared/components/providers/UserProvider";
 import ConfirmDeleteDialog from "@/shared/components/ui/ConfirmDeleteDialog";
 import Pill from "@/shared/components/ui/Pill";
 import { appToast } from "@/shared/lib/toast";
 
 export default function PostitulosPage() {
   const router = useRouter();
+  const { user } = useUserContext();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuPostitulo, setMenuPostitulo] = useState<Postitulo | null>(null);
   const [openForm, setOpenForm] = useState(false);
@@ -78,16 +80,18 @@ export default function PostitulosPage() {
         <Typography variant="h5" fontWeight={600}>
           Postitulos
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setSelectedPostitulo(null);
-            setOpenForm(true);
-          }}
-        >
-          Nuevo postitulo
-        </Button>
+        {user?.rol === "ADMIN" && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setSelectedPostitulo(null);
+              setOpenForm(true);
+            }}
+          >
+            Nuevo postitulo
+          </Button>
+        )}
       </Stack>
 
       <Stack spacing={3}>
